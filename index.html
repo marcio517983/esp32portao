@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>CONTROWS - Remote Access</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #0f172a; color: white; text-align: center; }
+        .btn { padding: 30px; width: 80%; max-width: 300px; border-radius: 20px; border: none; 
+               background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; font-size: 20px; font-weight: bold; cursor: pointer; }
+        #status { font-size: 24px; margin: 20px; color: #10b981; }
+    </style>
+</head>
+<body>
+    <h1>CONTROWS SISTEMAS</h1>
+    <div id="status">Conectando...</div>
+    <button class="btn" onclick="enviarComando()">ABRIR PORTÃO</button>
+
+    <script>
+        // Configurações do seu HiveMQ
+        const options = {
+            connectTimeout: 4000,
+            clientId: 'web_app_' + Math.random().toString(16).substr(2, 8),
+            keepalive: 60,
+            clean: true,
+            username: 'esp32', 
+            password: '517983lgA'
+        };
+
+        // URL de WebSocket do HiveMQ (verifique no seu console HiveMQ, geralmente termina em /mqtt)
+        const client = mqtt.connect('wss://e6609cbe84ae4e2b8eda83c3164e7900.s1.eu.hivemq.cloud:8884/mqtt', options);
+
+        client.on('connect', () => {
+            document.getElementById('status').innerText = "Online - Pronto";
+            client.subscribe('esp32/esp32_01/sensores');
+        });
+
+        client.on('message', (topic, message) => {
+            if(topic === 'esp32/esp32_01/sensores') {
+                const data = JSON.parse(message.toString());
+                document.getElementById('status').innerText = data.sensor2 === "ABERTO" ? "PORTÃO ABERTO" : "Portão Fechado";
+                document.getElementById('status').style.color = data.sensor2 === "ABERTO" ? "#ef4444" : "#10b981";
+            }
+        });
+
+        function enviarComando() {
+            client.publish('esp32/esp32_01/comando', 'PULSO');
+        }
+    </script>
+</body>
+</html>
