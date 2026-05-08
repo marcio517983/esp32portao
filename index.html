@@ -55,6 +55,7 @@
             border-radius: 30px;
             margin: 30px 0;
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            min-height: 150px; /* Mantém a altura mesmo sem texto */
         }
 
         #gateText {
@@ -62,6 +63,7 @@
             font-weight: 900;
             margin: 10px 0;
             transition: 0.3s;
+            height: 60px;
         }
 
         .btn-action {
@@ -83,7 +85,7 @@
             transform: scale(0.95);
         }
 
-        .alert-banner {
+        #alertBanner {
             background: var(--danger);
             color: white;
             padding: 15px;
@@ -100,7 +102,6 @@
         }
 
         .on { color: var(--success); }
-        .off { color: #64748b; }
     </style>
 </head>
 <body>
@@ -112,24 +113,25 @@
     </header>
 
     <div class="status-card">
-        <div style="font-size: 0.9rem; opacity: 0.6;">STATUS DO PORTÃO</div>
+        <div style="font-size: 0.9rem; opacity: 0.6; margin-bottom: 10px;">SISTEMA</div>
         <div id="gateText">CONECTANDO...</div>
-        <div id="alertBanner">ALERTA: PORTÃO ABERTO!</div>
+        <div id="alertBanner">⚠️ ATENÇÃO: PORTÃO ABERTO!</div>
     </div>
 
-    <button class="btn-action" onclick="enviarComando()">ABRIR</button>
+    <button class="btn-action" onclick="enviarComando()">ACIONAR</button>
 </div>
 
 <script>
-    // Configurações do seu HiveMQ - AJUSTE AQUI
     const broker = 'wss://e6609cbe84ae4e2b8eda83c3164e7900.s1.eu.hivemq.cloud:8884/mqtt';
     const options = {
         clientId: 'web_client_' + Math.random().toString(16).substr(2, 8),
         username: 'esp32',
-        password: '517983lgA', // Use a sua senha configurada
+        password: '517983lgA',
         clean: true
     };
 
+    const TEMPO_LIMITE_ALERTA = 30000; // 30 segundos
+    let timerPortaoAberto = null;
     const audioAlerta = new Audio('https://www.soundjay.com/buttons/beep-01a.mp3');
     let mqttClient = mqtt.connect(broker, options);
 
@@ -147,23 +149,34 @@
             if (data.sensor2 === "ABERTO") {
                 textEl.innerText = "ABERTO";
                 textEl.className = "on";
-                alertEl.style.display = "block";
-                playAlert();
+                
+                // Inicia o timer se ainda não houver um rodando
+                if (!timerPortaoAberto) {
+                    timerPortaoAberto = setTimeout(() => {
+                        alertEl.style.display = "block";
+                        playAlert();
+                    }, TEMPO_LIMITE_ALERTA);
+                }
             } else {
-                textEl.innerText = "FECHADO";
-                textEl.className = "off";
+                // Se o status for FECHADO ou qualquer outro
+                textEl.innerText = ""; // Remove o texto "FECHADO"
                 alertEl.style.display = "none";
+                
+                // Cancela o timer e para o som
+                clearTimeout(timerPortaoAberto);
+                timerPortaoAberto = null;
                 stopAlert();
             }
         }
     });
 
     function enviarComando() {
-        // Ao clicar aqui, o navegador libera o som para o alerta futuro
+        // Desbloqueia o áudio no navegador
         audioAlerta.play().then(() => {
             audioAlerta.pause();
             audioAlerta.currentTime = 0;
-        });
+        }).catch(e => console.log("Áudio aguardando interação"));
+        
         mqttClient.publish('esp32/esp32_01/comando', 'PULSO');
     }
 
