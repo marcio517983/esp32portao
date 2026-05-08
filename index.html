@@ -55,7 +55,11 @@
             border-radius: 30px;
             margin: 30px 0;
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            min-height: 150px; /* Mantém a altura mesmo sem texto */
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
         #gateText {
@@ -63,17 +67,17 @@
             font-weight: 900;
             margin: 10px 0;
             transition: 0.3s;
-            height: 60px;
+            text-transform: uppercase;
         }
 
         .btn-action {
-            width: 220px;
-            height: 220px;
+            width: 200px;
+            height: 200px;
             border-radius: 50%;
             border: none;
             background: linear-gradient(135deg, #3b82f6, #2563eb);
             color: white;
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 15px 35px rgba(37, 99, 235, 0.4);
@@ -82,26 +86,27 @@
         }
 
         .btn-action:active {
-            transform: scale(0.95);
+            transform: scale(0.92);
         }
 
         #alertBanner {
             background: var(--danger);
             color: white;
-            padding: 15px;
-            border-radius: 15px;
+            padding: 12px 20px;
+            border-radius: 12px;
             font-weight: bold;
-            margin-top: 20px;
+            margin-top: 15px;
             display: none;
             animation: pulse 1s infinite;
         }
 
         @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
         }
 
         .on { color: var(--success); }
+        .warning { color: var(--danger); }
     </style>
 </head>
 <body>
@@ -113,9 +118,9 @@
     </header>
 
     <div class="status-card">
-        <div style="font-size: 0.9rem; opacity: 0.6; margin-bottom: 10px;">SISTEMA</div>
+        <div style="font-size: 0.8rem; opacity: 0.5; margin-bottom: 5px; letter-spacing: 1px;">MONITORAMENTO</div>
         <div id="gateText">CONECTANDO...</div>
-        <div id="alertBanner">⚠️ ATENÇÃO: PORTÃO ABERTO!</div>
+        <div id="alertBanner">⚠️ PORTÃO ABERTO HÁ MUITO TEMPO</div>
     </div>
 
     <button class="btn-action" onclick="enviarComando()">ACIONAR</button>
@@ -124,19 +129,17 @@
 <script>
     const broker = 'wss://e6609cbe84ae4e2b8eda83c3164e7900.s1.eu.hivemq.cloud:8884/mqtt';
     const options = {
-        clientId: 'web_client_' + Math.random().toString(16).substr(2, 8),
+        clientId: 'controws_web_' + Math.random().toString(16).substr(2, 5),
         username: 'esp32',
         password: '517983lgA',
         clean: true
     };
 
-    const TEMPO_LIMITE_ALERTA = 30000; // 30 segundos
-    let timerPortaoAberto = null;
     const audioAlerta = new Audio('https://www.soundjay.com/buttons/beep-01a.mp3');
     let mqttClient = mqtt.connect(broker, options);
 
     mqttClient.on('connect', () => {
-        document.getElementById('gateText').innerText = "ONLINE";
+        document.getElementById('gateText').innerText = "SISTEMA OK";
         mqttClient.subscribe('esp32/esp32_01/sensores');
     });
 
@@ -146,43 +149,51 @@
             const textEl = document.getElementById('gateText');
             const alertEl = document.getElementById('alertBanner');
 
-            if (data.sensor2 === "ABERTO") {
-                textEl.innerText = "ABERTO";
-                textEl.className = "on";
+            // Lógica baseada nos estados enviados pelo novo código do ESP32
+            switch(data.sensor2) {
+                case "ABERTO":
+                    textEl.innerText = "ABERTO";
+                    textEl.className = "on";
+                    alertEl.style.display = "none";
+                    stopAlert();
+                    break;
+
+                case "ALERTA":
+                    textEl.innerText = "ABERTO";
+                    textEl.className = "warning";
+                    alertEl.style.display = "block";
+                    playAlert();
+                    break;
+
+                case "FECHADO":
+                    textEl.innerText = ""; // Fica vazio conforme solicitado
+                    alertEl.style.display = "none";
+                    stopAlert();
+                    break;
                 
-                // Inicia o timer se ainda não houver um rodando
-                if (!timerPortaoAberto) {
-                    timerPortaoAberto = setTimeout(() => {
-                        alertEl.style.display = "block";
-                        playAlert();
-                    }, TEMPO_LIMITE_ALERTA);
-                }
-            } else {
-                // Se o status for FECHADO ou qualquer outro
-                textEl.innerText = ""; // Remove o texto "FECHADO"
-                alertEl.style.display = "none";
-                
-                // Cancela o timer e para o som
-                clearTimeout(timerPortaoAberto);
-                timerPortaoAberto = null;
-                stopAlert();
+                case "MOVIMENTO":
+                    textEl.innerText = "EM CURSO";
+                    textEl.className = "";
+                    alertEl.style.display = "none";
+                    stopAlert();
+                    break;
             }
         }
     });
 
     function enviarComando() {
-        // Desbloqueia o áudio no navegador
+        // Pré-carrega o áudio para contornar bloqueios de navegadores mobile
         audioAlerta.play().then(() => {
             audioAlerta.pause();
             audioAlerta.currentTime = 0;
-        }).catch(e => console.log("Áudio aguardando interação"));
+        }).catch(() => {});
         
         mqttClient.publish('esp32/esp32_01/comando', 'PULSO');
     }
 
     function playAlert() {
         audioAlerta.loop = true;
-        audioAlerta.play().catch(e => console.log("Aguardando interação para som"));
+        audioAlerta.play().catch(e => console.log("Interação necessária para o som"));
     }
 
     function stopAlert() {
