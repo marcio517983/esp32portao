@@ -3,124 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CONTROWS SISTEMAS</title>
+    <title>CONTROWS - BOX INVERTER</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
     <style>
         :root {
-            --bg: #0f172a;
-            --card: #1e293b;
-            --accent: #3b82f6;
-            --success: #10b981;
-            --danger: #ef4444;
+            --bg: #0f172a; --card: #1e293b; --accent: #3b82f6;
+            --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
         }
 
         body {
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg);
-            color: white;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg); color: white;
+            margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh;
         }
 
-        .app-container {
-            width: 100%;
-            max-width: 500px;
-            text-align: center;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            height: 100%;
-        }
+        .app-container { width: 90%; max-width: 400px; text-align: center; position: relative; }
 
-        header h1 {
-            font-size: 1.5rem;
-            letter-spacing: 2px;
-            margin-bottom: 5px;
+        /* Ícone de Conexão Fixo */
+        .conn-status {
+            position: absolute; top: -40px; right: 0;
+            display: flex; align-items: center; font-size: 0.7rem; font-weight: bold;
         }
-
-        header span {
-            color: var(--accent);
-            font-size: 0.8rem;
-            font-weight: bold;
+        .dot {
+            height: 10px; width: 10px; background-color: var(--danger);
+            border-radius: 50%; display: inline-block; margin-left: 8px;
+            box-shadow: 0 0 8px var(--danger);
         }
+        .dot.online { background-color: var(--success); box-shadow: 0 0 8px var(--success); }
 
         .status-card {
-            background: var(--card);
-            padding: 40px 20px;
-            border-radius: 30px;
-            margin: 30px 0;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            min-height: 180px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            background: var(--card); padding: 30px; border-radius: 25px;
+            margin: 20px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.05);
         }
 
-        #gateText {
-            font-size: 2.5rem;
-            font-weight: 900;
-            margin: 10px 0;
-            transition: 0.3s;
-            text-transform: uppercase;
-        }
-
+        #gateText { font-size: 2rem; font-weight: 800; margin: 10px 0; text-transform: uppercase; }
+        
         .btn-action {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            border: none;
+            width: 180px; height: 180px; border-radius: 50%; border: none;
             background: linear-gradient(135deg, #3b82f6, #2563eb);
-            color: white;
-            font-size: 1.5rem;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 15px 35px rgba(37, 99, 235, 0.4);
-            margin: 20px auto;
-            transition: transform 0.1s;
+            color: white; font-size: 1.4rem; font-weight: bold; cursor: pointer;
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3); transition: 0.1s;
         }
-
-        .btn-action:active {
-            transform: scale(0.92);
-        }
+        .btn-action:active { transform: scale(0.95); }
 
         #alertBanner {
-            background: var(--danger);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 12px;
-            font-weight: bold;
-            margin-top: 15px;
-            display: none;
-            animation: pulse 1s infinite;
+            background: var(--danger); padding: 15px; border-radius: 12px;
+            margin-top: 15px; display: none; animation: pulse 1s infinite;
         }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.8; }
-        }
-
-        .on { color: var(--success); }
-        .warning { color: var(--danger); }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        .text-success { color: var(--success); }
+        .text-warning { color: var(--warning); }
+        .text-muted { color: #64748b; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
+    <div class="conn-status">
+        SISTEMA: <span id="connLabel" style="margin-left:5px">OFFLINE</span>
+        <span id="connDot" class="dot"></span>
+    </div>
+
     <header>
-        <h1>CONTROWS</h1>
-        <span>SISTEMAS DE AUTOMAÇÃO</span>
+        <h1 style="margin:0; font-size: 1.8rem;">CONTROWS</h1>
+        <div style="color: var(--accent); font-size: 0.7rem; font-weight: bold;">BOX INVERTER PROJECT</div>
     </header>
 
     <div class="status-card">
-        <div style="font-size: 0.8rem; opacity: 0.5; margin-bottom: 5px; letter-spacing: 1px;">MONITORAMENTO</div>
-        <div id="gateText">CONECTANDO...</div>
-        <div id="alertBanner">⚠️ PORTÃO ABERTO HÁ MUITO TEMPO</div>
+        <div id="gateText" class="text-muted">AGUARDANDO...</div>
+        <div id="alertBanner">⚠️ ALERTA: PORTÃO ABERTO!</div>
     </div>
 
     <button class="btn-action" onclick="enviarComando()">ACIONAR</button>
@@ -129,79 +82,58 @@
 <script>
     const broker = 'wss://e6609cbe84ae4e2b8eda83c3164e7900.s1.eu.hivemq.cloud:8884/mqtt';
     const options = {
-        clientId: 'controws_web_' + Math.random().toString(16).substr(2, 5),
-        username: 'esp32',
-        password: '517983lgA',
-        clean: true
+        clientId: 'web_' + Math.random().toString(16).substr(2, 5),
+        username: 'esp32', password: '517983lgA', clean: true
     };
 
-    const audioAlerta = new Audio('https://www.soundjay.com/buttons/beep-01a.mp3');
-    let mqttClient = mqtt.connect(broker, options);
+    const audio = new Audio('https://www.soundjay.com/buttons/beep-01a.mp3');
+    let client = mqtt.connect(broker, options);
 
-    mqttClient.on('connect', () => {
-        document.getElementById('gateText').innerText = "SISTEMA OK";
-        mqttClient.subscribe('esp32/esp32_01/sensores');
+    client.on('connect', () => {
+        document.getElementById('connDot').classList.add('online');
+        document.getElementById('connLabel').innerText = "ONLINE";
+        client.subscribe('esp32/esp32_01/sensores');
     });
 
-    mqttClient.on('message', (topic, message) => {
-        if (topic === 'esp32/esp32_01/sensores') {
-            const data = JSON.parse(message.toString());
-            const textEl = document.getElementById('gateText');
-            const alertEl = document.getElementById('alertBanner');
+    client.on('offline', () => {
+        document.getElementById('connDot').classList.remove('online');
+        document.getElementById('connLabel').innerText = "OFFLINE";
+    });
 
-            // Lógica baseada nos estados enviados pelo novo código do ESP32
-            switch(data.sensor2) {
-                case "ABERTO":
-                    textEl.innerText = "ABERTO";
-                    textEl.className = "on";
-                    alertEl.style.display = "none";
-                    stopAlert();
-                    break;
+    client.on('message', (topic, msg) => {
+        const data = JSON.parse(msg.toString());
+        const display = document.getElementById('gateText');
+        const alert = document.getElementById('alertBanner');
 
-                case "ALERTA":
-                    textEl.innerText = "ABERTO";
-                    textEl.className = "warning";
-                    alertEl.style.display = "block";
-                    playAlert();
-                    break;
+        // Reset geral
+        alert.style.display = "none";
+        audio.pause(); audio.currentTime = 0;
 
-                case "FECHADO":
-                    textEl.innerText = ""; // Fica vazio conforme solicitado
-                    alertEl.style.display = "none";
-                    stopAlert();
-                    break;
-                
-                case "MOVIMENTO":
-                    textEl.innerText = "EM CURSO";
-                    textEl.className = "";
-                    alertEl.style.display = "none";
-                    stopAlert();
-                    break;
-            }
+        if (data.sensor2 === "ABERTO") {
+            display.innerText = "ABERTO";
+            display.className = "text-success";
+        } 
+        else if (data.sensor2 === "FECHADO") {
+            display.innerText = "FECHADO";
+            display.className = "text-muted";
+        } 
+        else if (data.sensor2 === "ALERTA") {
+            display.innerText = "ABERTO";
+            display.className = "text-warning";
+            alert.style.display = "block";
+            audio.loop = true; audio.play().catch(() => {});
+        }
+        else if (data.sensor2 === "MOVIMENTO") {
+            display.innerText = "EM CURSO...";
+            display.className = "";
         }
     });
 
     function enviarComando() {
-        // Pré-carrega o áudio para contornar bloqueios de navegadores mobile
-        audioAlerta.play().then(() => {
-            audioAlerta.pause();
-            audioAlerta.currentTime = 0;
-        }).catch(() => {});
-        
-        mqttClient.publish('esp32/esp32_01/comando', 'PULSO');
-    }
-
-    function playAlert() {
-        audioAlerta.loop = true;
-        audioAlerta.play().catch(e => console.log("Interação necessária para o som"));
-    }
-
-    function stopAlert() {
-        audioAlerta.loop = false;
-        audioAlerta.pause();
-        audioAlerta.currentTime = 0;
+        // Libera áudio no mobile
+        audio.play().then(() => { audio.pause(); }).catch(() => {});
+        client.publish('esp32/esp32_01/comando', 'PULSO');
     }
 </script>
-
 </body>
 </html>
