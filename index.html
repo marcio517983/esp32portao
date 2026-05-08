@@ -2,214 +2,50 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CONTROWS - Remote Access</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
     <style>
-        :root {
-            --bg: #0f172a;
-            --card: #1e293b;
-            --accent: #3b82f6;
-            --success: #10b981;
-            --danger: #ef4444;
-            --input-bg: #0f172a;
-        }
-
-        body {
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg);
-            color: white;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        .app-container {
-            width: 90%;
-            max-width: 450px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            padding: 20px 0;
-        }
-
-        header h1 { font-size: 1.8rem; letter-spacing: 2px; margin: 0; }
-        header span { color: var(--accent); font-size: 0.8rem; font-weight: bold; }
-
-        .card {
-            background: var(--card);
-            padding: 25px;
-            border-radius: 30px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
-        }
-
-        /* Campos de Login */
-        .auth-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        input {
-            background: var(--input-bg);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 15px;
-            color: white;
-            font-size: 1rem;
-            outline: none;
-        }
-
-        input:focus { border-color: var(--accent); }
-
-        /* Status */
-        #gateText {
-            font-size: 2.2rem;
-            font-weight: 900;
-            margin: 10px 0;
-        }
-
-        .btn-action {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            border: none;
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            color: white;
-            font-size: 1.6rem;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.4);
-            margin: 20px auto;
-            transition: 0.2s;
-        }
-
-        .btn-action:active { transform: scale(0.92); }
-
-        .alert-banner {
-            background: var(--danger);
-            padding: 15px;
-            border-radius: 15px;
-            font-weight: bold;
-            display: none;
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse { 50% { opacity: 0.6; } }
-        .on { color: var(--success); }
-        .off { color: #64748b; }
+        body { font-family: sans-serif; background: #0f172a; color: white; text-align: center; }
+        .btn { padding: 30px; width: 80%; max-width: 300px; border-radius: 20px; border: none; 
+               background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; font-size: 20px; font-weight: bold; cursor: pointer; }
+        #status { font-size: 24px; margin: 20px; color: #10b981; }
     </style>
 </head>
 <body>
+    <h1>CONTROWS SISTEMAS</h1>
+    <div id="status">Conectando...</div>
+    <button class="btn" onclick="enviarComando()">ABRIR PORTÃO</button>
 
-<div class="app-container">
-    <header>
-        <h1>CONTROWS</h1>
-        <span>SISTEMAS DE AUTOMAÇÃO</span>
-    </header>
+    <script>
+        // Configurações do seu HiveMQ
+        const options = {
+            connectTimeout: 4000,
+            clientId: 'web_app_' + Math.random().toString(16).substr(2, 8),
+            keepalive: 60,
+            clean: true,
+            username: 'esp32', 
+            password: '517983lgA'
+        };
 
-    <!-- Card de Autenticação -->
-    <div class="card">
-        <div class="auth-group">
-            <input type="text" id="user" placeholder="Usuário">
-            <input type="password" id="pass" placeholder="Senha">
-        </div>
-        <div style="font-size: 0.7rem; opacity: 0.5;">Os dados serão salvos neste dispositivo.</div>
-    </div>
+        // URL de WebSocket do HiveMQ (verifique no seu console HiveMQ, geralmente termina em /mqtt)
+        const client = mqtt.connect('wss://e6609cbe84ae4e2b8eda83c3164e7900.s1.eu.hivemq.cloud:8884/mqtt', options);
 
-    <!-- Card de Status -->
-    <div class="card">
-        <div style="font-size: 0.8rem; opacity: 0.6; margin-bottom: 5px;">ESTADO ATUAL</div>
-        <div id="gateText">CONECTANDO...</div>
-        <div id="alertBanner">PORTÃO ESQUECIDO ABERTO!</div>
-    </div>
+        client.on('connect', () => {
+            document.getElementById('status').innerText = "Online - Pronto";
+            client.subscribe('esp32/esp32_01/sensores');
+        });
 
-    <button class="btn-action" onclick="enviarComando()">ABRIR</button>
-</div>
-
-<script>
-    // CONFIGURAÇÕES HIVE MQ
-    const broker = 'wss://e6609cbe84ae4e2b8eda83c3164e7900.s1.eu.hivemq.cloud:8884/mqtt';
-    const options = {
-        clientId: 'controws_web_' + Math.random().toString(16).substr(2, 6),
-        username: 'esp32',
-        password: '517983lgA',
-        clean: true
-    };
-
-    const audioAlerta = new Audio('https://www.soundjay.com/buttons/beep-01a.mp3');
-    let mqttClient = mqtt.connect(broker, options);
-
-    // Carregar dados salvos ao iniciar
-    window.onload = () => {
-        if(localStorage.getItem('controws_user')) {
-            document.getElementById('user').value = localStorage.getItem('controws_user');
-            document.getElementById('pass').value = localStorage.getItem('controws_pass');
-        }
-    };
-
-    mqttClient.on('connect', () => {
-        document.getElementById('gateText').innerText = "ONLINE";
-        mqttClient.subscribe('esp32/esp32_01/sensores');
-    });
-
-    mqttClient.on('message', (topic, message) => {
-        if (topic === 'esp32/esp32_01/sensores') {
-            const data = JSON.parse(message.toString());
-            const textEl = document.getElementById('gateText');
-            const alertEl = document.getElementById('alertBanner');
-
-            if (data.sensor2 === "ABERTO") {
-                textEl.innerText = "ABERTO";
-                textEl.className = "on";
-                alertEl.style.display = "block";
-                playAlert();
-            } else {
-                textEl.innerText = "FECHADO";
-                textEl.className = "off";
-                alertEl.style.display = "none";
-                stopAlert();
+        client.on('message', (topic, message) => {
+            if(topic === 'esp32/esp32_01/sensores') {
+                const data = JSON.parse(message.toString());
+                document.getElementById('status').innerText = data.sensor2 === "ABERTO" ? "PORTÃO ABERTO" : "Portão Fechado";
+                document.getElementById('status').style.color = data.sensor2 === "ABERTO" ? "#ef4444" : "#10b981";
             }
+        });
+
+        function enviarComando() {
+            client.publish('esp32/esp32_01/comando', 'PULSO');
         }
-    });
-
-    function enviarComando() {
-        const u = document.getElementById('user').value;
-        const p = document.getElementById('pass').value;
-
-        if(!u || !p) {
-            alert("Por favor, preencha Usuário e Senha.");
-            return;
-        }
-
-        // Salvar para o próximo acesso
-        localStorage.setItem('controws_user', u);
-        localStorage.setItem('controws_pass', p);
-
-        // Formato seguro esperado pelo ESP32: usuario:senha:PULSO
-        const payload = `${u}:${p}:PULSO`;
-        mqttClient.publish('esp32/esp32_01/comando', payload);
-
-        // Desbloqueia áudio para o alerta
-        audioAlerta.play().then(() => { audioAlerta.pause(); audioAlerta.currentTime = 0; });
-    }
-
-    function playAlert() {
-        audioAlerta.loop = true;
-        audioAlerta.play().catch(() => {});
-    }
-
-    function stopAlert() {
-        audioAlerta.loop = false;
-        audioAlerta.pause();
-        audioAlerta.currentTime = 0;
-    }
-</script>
-
+    </script>
 </body>
 </html>
