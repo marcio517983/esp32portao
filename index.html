@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CONTROWS - BOX INVERTER</title>
+    <title>CONTROWS - PREMIUM</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
     <style>
         :root {
-            --bg: #0f172a;
-            --card: #1e293b;
-            --accent: #3b82f6;
-            --pure-green: #00FF00; /* Verde Sólido */
-            --pure-red: #FF0000;   /* Vermelho Sólido */
-            --text-main: #ffffff;
+            --bg: #050505;
+            --card: #111111;
+            --green-neon: #00ff41;
+            --red-neon: #ff003c;
+            --blue-neon: #00d2ff;
+            --text: #ffffff;
         }
 
         body {
-            font-family: 'Arial Black', Gadget, sans-serif;
+            font-family: 'Segoe UI', Roboto, sans-serif;
             background-color: var(--bg);
-            color: var(--text-main);
+            color: var(--text);
             margin: 0;
             display: flex;
             justify-content: center;
@@ -29,104 +29,110 @@
 
         .app-container {
             width: 90%;
-            max-width: 400px;
+            max-width: 380px;
             text-align: center;
         }
 
-        /* Status de Conexão */
+        /* Status de Conexão Minimalista */
         .conn-status {
-            margin-bottom: 10px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .dot {
-            height: 12px; width: 12px; border-radius: 50%;
-            background: var(--pure-red);
-            border: 2px solid white;
-        }
-        .dot.online { background: var(--pure-green); }
-
-        /* Card com Bordas Brancas */
-        .status-card {
-            background-color: var(--card);
-            padding: 45px 20px;
-            border-radius: 25px;
-            margin: 20px 0;
-            border: 5px solid #ffffff; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-        }
-
-        #gateText { 
-            font-size: 3.5rem; 
-            font-weight: 900; 
-            margin: 0;
+            font-size: 0.6rem;
             text-transform: uppercase;
             letter-spacing: 2px;
+            margin-bottom: 20px;
+            color: #444;
+            transition: 0.3s;
         }
-        
-        /* Classes de Cores Sólidas */
-        .status-aberto { color: var(--pure-green) !important; }
-        .status-fechado { color: var(--pure-red) !important; }
+        .conn-status.online { color: var(--blue-neon); text-shadow: 0 0 8px var(--blue-neon); }
 
-        /* Botão de Acionamento */
+        header h1 { 
+            margin: 0; 
+            font-size: 2.5rem; 
+            font-weight: 900; 
+            letter-spacing: -1px;
+            font-style: italic;
+        }
+
+        /* CARD COM BORDA NEON DINÂMICA */
+        .status-card {
+            background: var(--card);
+            padding: 50px 20px;
+            border-radius: 20px;
+            margin: 30px 0;
+            border: 2px solid #222;
+            transition: all 0.5s ease;
+            position: relative;
+        }
+
+        /* Estados do Card */
+        .card-aberto { border-color: var(--green-neon); box-shadow: 0 0 20px rgba(0, 255, 65, 0.2); }
+        .card-fechado { border-color: var(--red-neon); box-shadow: 0 0 20px rgba(255, 0, 60, 0.2); }
+
+        #gateText { 
+            font-size: 3.2rem; 
+            font-weight: 900; 
+            margin: 0;
+            transition: 0.3s;
+        }
+
+        /* BOTÃO DE ACIONAMENTO TECNOLÓGICO */
         .btn-action {
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            border: 8px solid #ffffff;
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
-            color: white;
-            font-size: 1.6rem;
-            font-weight: 900;
+            width: 140px;
+            height: 140px;
+            border-radius: 30px; /* Quadrado arredondado moderno */
+            border: 2px solid var(--blue-neon);
+            background: transparent;
+            color: var(--blue-neon);
+            font-size: 1rem;
+            font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 10px 0px #1e40af;
-            transition: all 0.1s;
+            text-transform: uppercase;
+            transition: all 0.3s;
+            box-shadow: inset 0 0 10px rgba(0, 210, 255, 0.2), 0 0 15px rgba(0, 210, 255, 0.1);
         }
 
         .btn-action:active {
-            transform: translateY(6px);
-            box-shadow: 0 4px 0px #1e40af;
+            transform: scale(0.9);
+            background: var(--blue-neon);
+            color: black;
+            box-shadow: 0 0 30px var(--blue-neon);
         }
+
+        /* Cores de Texto */
+        .txt-green { color: var(--green-neon); text-shadow: 0 0 15px var(--green-neon); }
+        .txt-red { color: var(--red-neon); text-shadow: 0 0 15px var(--red-neon); }
+        .txt-dim { color: #333; }
 
         #alertBanner {
-            background: var(--pure-red);
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--red-neon);
             color: white;
-            padding: 12px;
-            border-radius: 10px;
-            margin-top: 15px;
-            font-weight: bold;
+            padding: 5px 15px;
+            font-size: 0.7rem;
+            border-radius: 5px;
             display: none;
-            border: 2px solid white;
-            animation: blink 0.5s infinite alternate;
+            white-space: nowrap;
         }
-
-        @keyframes blink { from { opacity: 1; } to { opacity: 0.6; } }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div class="conn-status">
-        <div id="connDot" class="dot"></div>
-        <span id="connLabel">SISTEMA OFFLINE</span>
-    </div>
+    <div id="connStatus" class="conn-status">SISTEMA OFFLINE</div>
 
     <header>
-        <h1 style="margin:0; font-size: 2.8rem;">CONTROWS</h1>
-        <div style="color: var(--accent); font-size: 0.9rem; font-weight: bold; letter-spacing: 3px;">BOX INVERTER</div>
+        <h1>CONTROWS</h1>
+        <div style="font-size: 0.7rem; opacity: 0.5; letter-spacing: 4px;">INTERFACE INDUSTRIAL</div>
     </header>
 
-    <div class="status-card">
-        <div id="gateText" style="color: #64748b;">AGUARDANDO</div>
-        <div id="alertBanner">⚠️ ALERTA: PORTÃO ABERTO!</div>
+    <div id="mainCard" class="status-card">
+        <div id="gateText" class="txt-dim">STANDBY</div>
+        <div id="alertBanner">ALERTA CRÍTICO</div>
     </div>
 
-    <button class="btn-action" onclick="enviarComando()">ACIONAR</button>
+    <button class="btn-action" onclick="enviarComando()">Acionar<br>Sistema</button>
 </div>
 
 <script>
@@ -140,44 +146,48 @@
     let client = mqtt.connect(broker, options);
 
     client.on('connect', () => {
-        document.getElementById('connDot').classList.add('online');
-        document.getElementById('connLabel').innerText = "SISTEMA ONLINE";
+        document.getElementById('connStatus').innerText = "• CONECTADO AO BROKER •";
+        document.getElementById('connStatus').classList.add('online');
         client.subscribe('esp32/esp32_01/sensores');
     });
 
     client.on('offline', () => {
-        document.getElementById('connDot').classList.remove('online');
-        document.getElementById('connLabel').innerText = "SISTEMA OFFLINE";
+        document.getElementById('connStatus').innerText = "SISTEMA OFFLINE";
+        document.getElementById('connStatus').classList.remove('online');
     });
 
     client.on('message', (topic, msg) => {
         try {
             const data = JSON.parse(msg.toString());
             const display = document.getElementById('gateText');
+            const card = document.getElementById('mainCard');
             const alert = document.getElementById('alertBanner');
 
             alert.style.display = "none";
+            card.className = "status-card"; // Reset classes
 
             if (data.sensor2 === "ABERTO") {
                 display.innerText = "ABERTO";
-                display.className = "status-aberto";
+                display.className = "txt-green";
+                card.classList.add('card-aberto');
             } 
             else if (data.sensor2 === "FECHADO") {
                 display.innerText = "FECHADO";
-                display.className = "status-fechado";
+                display.className = "txt-red";
+                card.classList.add('card-fechado');
             } 
             else if (data.sensor2 === "ALERTA") {
-                display.innerText = "ABERTO";
-                display.className = "status-aberto";
+                display.innerText = "ALERTA";
+                display.className = "txt-red";
+                card.classList.add('card-fechado');
                 alert.style.display = "block";
                 audio.play().catch(() => {});
             }
             else if (data.sensor2 === "MOVIMENTO") {
-                display.innerText = "EM CURSO";
+                display.innerText = "CURSO...";
                 display.className = "";
-                display.style.color = "#ffffff";
             }
-        } catch (e) { console.log("Erro na leitura"); }
+        } catch (e) { console.log("Erro de dados"); }
     });
 
     function enviarComando() {
