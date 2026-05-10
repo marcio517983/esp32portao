@@ -39,7 +39,6 @@
             letter-spacing: 2px;
             margin-bottom: 20px;
             color: #444;
-            transition: 0.3s;
             font-weight: bold;
         }
         .conn-status.online { color: var(--blue-neon); text-shadow: 0 0 10px var(--blue-neon); }
@@ -69,9 +68,9 @@
             font-size: 3.2rem; 
             font-weight: 900; 
             margin: 0;
-            transition: 0.3s;
         }
 
+        /* Botão Principal */
         .btn-action {
             width: 150px;
             height: 150px;
@@ -91,8 +90,23 @@
             transform: scale(0.9);
             background: var(--blue-neon);
             color: black;
-            box-shadow: 0 0 30px var(--blue-neon);
         }
+
+        /* Botão Administrador */
+        .btn-admin {
+            margin-top: 25px;
+            background: transparent;
+            border: 1px solid #333;
+            color: #555;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+        }
+        .btn-admin:hover { border-color: var(--blue-neon); color: var(--blue-neon); }
 
         .txt-green { color: var(--green-neon); text-shadow: 0 0 15px var(--green-neon); }
         .txt-red { color: var(--red-neon); text-shadow: 0 0 15px var(--red-neon); }
@@ -132,6 +146,9 @@
     </div>
 
     <button class="btn-action" onclick="enviarComando()">Acionar<br>Sistema</button>
+    
+    <br>
+    <button class="btn-admin" onclick="acessoAdmin()">⚙️ Auto Configuração</button>
 </div>
 
 <script>
@@ -143,6 +160,9 @@
 
     const audio = new Audio('https://www.soundjay.com/buttons/beep-01a.mp3');
     let client = mqtt.connect(broker, options);
+
+    // PIN DE ADMINISTRADOR ATUALIZADO
+    const ADMIN_PIN = "5179"; 
 
     client.on('connect', () => {
         const statusEl = document.getElementById('connStatus');
@@ -164,7 +184,6 @@
             const card = document.getElementById('mainCard');
             const alert = document.getElementById('alertBanner');
 
-            // Reset inicial
             alert.style.display = "none";
             card.className = "status-card"; 
 
@@ -182,18 +201,29 @@
                 display.innerText = "ALERTA";
                 display.className = "txt-red";
                 card.classList.add('card-fechado');
-                alert.style.display = "block"; // Corrigido para PORTÃO ABERTO
+                alert.style.display = "block";
                 audio.play().catch(() => {});
             }
             else if (data.sensor2 === "MOVIMENTO") {
                 display.innerText = "CURSO...";
                 display.className = "";
             }
-        } catch (e) { console.log("Erro de dados"); }
+        } catch (e) {}
     });
 
     function enviarComando() {
         client.publish('esp32/esp32_01/comando', 'PULSO');
+    }
+
+    function acessoAdmin() {
+        const pin = prompt("ACESSO RESTRITO: DIGITE O PIN");
+        
+        if (pin === ADMIN_PIN) {
+            client.publish('esp32/esp32_01/comando', 'CONFIG');
+            alert("COMANDO ENVIADO COM SUCESSO!");
+        } else if (pin !== null) {
+            alert("ERRO: PIN INVÁLIDO.");
+        }
     }
 </script>
 </body>
