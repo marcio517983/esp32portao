@@ -10,14 +10,13 @@
             --bg: #0f172a;
             --card: #1e293b;
             --accent: #3b82f6;
-            --success: #00ff00; /* Verde sólido vibrante */
-            --danger: #ff0000;  /* Vermelho sólido vibrante */
-            --warning: #ffcc00;
+            --pure-green: #00FF00; /* Verde Sólido */
+            --pure-red: #FF0000;   /* Vermelho Sólido */
             --text-main: #ffffff;
         }
 
         body {
-            font-family: 'Arial Black', sans-serif; /* Fonte mais robusta */
+            font-family: 'Arial Black', Gadget, sans-serif;
             background-color: var(--bg);
             color: var(--text-main);
             margin: 0;
@@ -25,6 +24,7 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
+            overflow: hidden;
         }
 
         .app-container {
@@ -33,81 +33,79 @@
             text-align: center;
         }
 
-        /* CARD COM BORDAS SÓLIDAS E CORES FORTES */
+        /* Status de Conexão */
+        .conn-status {
+            margin-bottom: 10px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dot {
+            height: 12px; width: 12px; border-radius: 50%;
+            background: var(--pure-red);
+            border: 2px solid white;
+        }
+        .dot.online { background: var(--pure-green); }
+
+        /* Card com Bordas Brancas */
         .status-card {
             background-color: var(--card);
-            padding: 40px 20px;
-            border-radius: 20px;
+            padding: 45px 20px;
+            border-radius: 25px;
             margin: 20px 0;
-            border: 4px solid #ffffff; /* Borda branca sólida */
-            box-shadow: 0 10px 0px rgba(0,0,0,0.3);
+            border: 5px solid #ffffff; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
         }
 
         #gateText { 
-            font-size: 3rem; 
+            font-size: 3.5rem; 
             font-weight: 900; 
             margin: 0;
             text-transform: uppercase;
+            letter-spacing: 2px;
         }
         
-        /* BOTÃO COM BORDA SÓLIDA GROSSA */
+        /* Classes de Cores Sólidas */
+        .status-aberto { color: var(--pure-green) !important; }
+        .status-fechado { color: var(--pure-red) !important; }
+
+        /* Botão de Acionamento */
         .btn-action {
             width: 180px;
             height: 180px;
             border-radius: 50%;
-            border: 8px solid #ffffff; /* Borda branca sólida */
-            background: #2563eb;
+            border: 8px solid #ffffff;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
             color: white;
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             font-weight: 900;
             cursor: pointer;
-            transition: transform 0.1s, background 0.2s;
-            box-shadow: 0 8px 0px #1e40af;
+            box-shadow: 0 10px 0px #1e40af;
+            transition: all 0.1s;
         }
 
         .btn-action:active {
-            transform: translateY(4px);
+            transform: translateY(6px);
             box-shadow: 0 4px 0px #1e40af;
-            background: #1d4ed8;
         }
-
-        /* CORES SÓLIDAS PARA OS STATUS */
-        .status-aberto { 
-            color: var(--success) !important; 
-            text-shadow: none; 
-        }
-
-        .status-fechado { 
-            color: var(--danger) !important; 
-            text-shadow: none; 
-        }
-
-        /* Status de Conexão */
-        .conn-status {
-            margin-bottom: 15px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
-
-        .dot {
-            display: inline-block;
-            height: 12px; width: 12px; border-radius: 50%;
-            margin-right: 5px; background: var(--danger);
-            border: 2px solid white;
-        }
-        .dot.online { background: var(--success); }
 
         #alertBanner {
-            background: var(--danger);
+            background: var(--pure-red);
             color: white;
-            padding: 10px;
-            border-radius: 8px;
+            padding: 12px;
+            border-radius: 10px;
             margin-top: 15px;
             font-weight: bold;
             display: none;
             border: 2px solid white;
+            animation: blink 0.5s infinite alternate;
         }
+
+        @keyframes blink { from { opacity: 1; } to { opacity: 0.6; } }
     </style>
 </head>
 <body>
@@ -119,13 +117,13 @@
     </div>
 
     <header>
-        <h1 style="margin:0; font-size: 2.5rem;">CONTROWS</h1>
-        <p style="margin:0; color: var(--accent); font-weight: bold;">BOX INVERTER</p>
+        <h1 style="margin:0; font-size: 2.8rem;">CONTROWS</h1>
+        <div style="color: var(--accent); font-size: 0.9rem; font-weight: bold; letter-spacing: 3px;">BOX INVERTER</div>
     </header>
 
     <div class="status-card">
-        <div id="gateText" style="color: #64748b;">---</div>
-        <div id="alertBanner">⚠️ PORTÃO ABERTO!</div>
+        <div id="gateText" style="color: #64748b;">AGUARDANDO</div>
+        <div id="alertBanner">⚠️ ALERTA: PORTÃO ABERTO!</div>
     </div>
 
     <button class="btn-action" onclick="enviarComando()">ACIONAR</button>
@@ -169,7 +167,7 @@
                 display.className = "status-fechado";
             } 
             else if (data.sensor2 === "ALERTA") {
-                display.innerText = "ALERTA";
+                display.innerText = "ABERTO";
                 display.className = "status-aberto";
                 alert.style.display = "block";
                 audio.play().catch(() => {});
@@ -179,7 +177,7 @@
                 display.className = "";
                 display.style.color = "#ffffff";
             }
-        } catch (e) { console.log("Erro no processamento"); }
+        } catch (e) { console.log("Erro na leitura"); }
     });
 
     function enviarComando() {
