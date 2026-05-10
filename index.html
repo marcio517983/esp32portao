@@ -7,21 +7,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
     <style>
         :root {
-            --bg: #020617;
-            --card: rgba(30, 41, 59, 0.8);
+            --bg: #0f172a;
+            --card: #1e293b;
             --accent: #3b82f6;
-            --success: #10b981;
-            --danger: #ef4444; 
-            --warning: #f59e0b;
+            --success: #00ff00; /* Verde sólido vibrante */
+            --danger: #ff0000;  /* Vermelho sólido vibrante */
+            --warning: #ffcc00;
             --text-main: #ffffff;
         }
 
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: #0f172a;
-            /* Fundo com gradiente para destacar as bordas */
-            background-image: radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0, transparent 50%), 
-                              radial-gradient(at 100% 100%, rgba(30, 41, 59, 0.4) 0, transparent 50%);
+            font-family: 'Arial Black', sans-serif; /* Fonte mais robusta */
+            background-color: var(--bg);
             color: var(--text-main);
             margin: 0;
             display: flex;
@@ -36,110 +33,98 @@
             text-align: center;
         }
 
-        /* CARD CENTRAL COM BORDA MUITO DEFINIDA */
+        /* CARD COM BORDAS SÓLIDAS E CORES FORTES */
         .status-card {
-            background: var(--card);
-            backdrop-filter: blur(15px);
+            background-color: var(--card);
             padding: 40px 20px;
-            border-radius: 40px;
-            margin: 30px 0;
-            /* Borda estilo "Glass" bem visível */
-            border: 3px solid rgba(255, 255, 255, 0.15); 
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            margin: 20px 0;
+            border: 4px solid #ffffff; /* Borda branca sólida */
+            box-shadow: 0 10px 0px rgba(0,0,0,0.3);
         }
 
         #gateText { 
-            font-size: 2.5rem; 
+            font-size: 3rem; 
             font-weight: 900; 
-            margin: 0; 
-            letter-spacing: -1px;
+            margin: 0;
+            text-transform: uppercase;
         }
         
-        /* BOTÃO COM BORDA DE ALTO CONTRASTE */
+        /* BOTÃO COM BORDA SÓLIDA GROSSA */
         .btn-action {
-            width: 170px;
-            height: 170px;
+            width: 180px;
+            height: 180px;
             border-radius: 50%;
-            /* Borda grossa e clara para destacar */
-            border: 8px solid rgba(255, 255, 255, 0.1);
-            background: linear-gradient(145deg, #3b82f6, #1e40af);
+            border: 8px solid #ffffff; /* Borda branca sólida */
+            background: #2563eb;
             color: white;
-            font-size: 1.3rem;
+            font-size: 1.5rem;
             font-weight: 900;
             cursor: pointer;
-            text-transform: uppercase;
-            position: relative;
-            transition: all 0.2s ease;
-            /* Sombra interna para dar volume */
-            box-shadow: inset 0 4px 10px rgba(255,255,255,0.2), 
-                        0 10px 20px rgba(0,0,0,0.4);
-            animation: glow-border 3s infinite;
+            transition: transform 0.1s, background 0.2s;
+            box-shadow: 0 8px 0px #1e40af;
         }
 
-        /* Efeito de clique realístico */
         .btn-action:active {
-            transform: scale(0.95);
-            border-color: var(--accent);
-            box-shadow: inset 0 10px 20px rgba(0,0,0,0.4);
+            transform: translateY(4px);
+            box-shadow: 0 4px 0px #1e40af;
+            background: #1d4ed8;
         }
 
-        /* Animação que muda a cor da borda */
-        @keyframes glow-border {
-            0% { border-color: rgba(255, 255, 255, 0.1); box-shadow: 0 0 0px var(--accent); }
-            50% { border-color: rgba(59, 130, 246, 0.8); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
-            100% { border-color: rgba(255, 255, 255, 0.1); box-shadow: 0 0 0px var(--accent); }
+        /* CORES SÓLIDAS PARA OS STATUS */
+        .status-aberto { 
+            color: var(--success) !important; 
+            text-shadow: none; 
+        }
+
+        .status-fechado { 
+            color: var(--danger) !important; 
+            text-shadow: none; 
         }
 
         /* Status de Conexão */
-        .conn-badge {
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.1);
-            display: inline-flex;
-            align-items: center;
-            padding: 8px 16px;
-            border-radius: 100px;
-            font-size: 0.7rem;
+        .conn-status {
+            margin-bottom: 15px;
+            font-size: 0.8rem;
             font-weight: bold;
-            margin-bottom: 20px;
+            letter-spacing: 1px;
         }
 
         .dot {
-            height: 10px; width: 10px; border-radius: 50%;
-            margin-right: 8px; background: var(--danger);
+            display: inline-block;
+            height: 12px; width: 12px; border-radius: 50%;
+            margin-right: 5px; background: var(--danger);
+            border: 2px solid white;
         }
-        .dot.online { background: var(--success); box-shadow: 0 0 10px var(--success); }
-
-        /* Cores de Mensagem */
-        .text-danger { color: #ff4d4d; text-shadow: 0 0 10px rgba(255, 77, 77, 0.3); }
-        .text-success { color: #00ff88; }
-        .text-warning { color: #ffcc00; }
+        .dot.online { background: var(--success); }
 
         #alertBanner {
             background: var(--danger);
             color: white;
             padding: 10px;
-            border-radius: 12px;
+            border-radius: 8px;
             margin-top: 15px;
             font-weight: bold;
             display: none;
+            border: 2px solid white;
         }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div class="conn-badge">
+    <div class="conn-status">
         <div id="connDot" class="dot"></div>
-        <span id="connLabel">OFFLINE</span>
+        <span id="connLabel">SISTEMA OFFLINE</span>
     </div>
 
     <header>
-        <h1 style="margin:0; font-size: 2.2rem; font-weight: 900;">CONTROWS</h1>
-        <p style="margin:0; color: var(--accent); letter-spacing: 2px; font-size: 0.8rem; font-weight: bold;">BOX INVERTER</p>
+        <h1 style="margin:0; font-size: 2.5rem;">CONTROWS</h1>
+        <p style="margin:0; color: var(--accent); font-weight: bold;">BOX INVERTER</p>
     </header>
 
     <div class="status-card">
-        <div id="gateText" style="color: #64748b;">AGUARDANDO</div>
+        <div id="gateText" style="color: #64748b;">---</div>
         <div id="alertBanner">⚠️ PORTÃO ABERTO!</div>
     </div>
 
@@ -158,13 +143,13 @@
 
     client.on('connect', () => {
         document.getElementById('connDot').classList.add('online');
-        document.getElementById('connLabel').innerText = "CONECTADO";
+        document.getElementById('connLabel').innerText = "SISTEMA ONLINE";
         client.subscribe('esp32/esp32_01/sensores');
     });
 
     client.on('offline', () => {
         document.getElementById('connDot').classList.remove('online');
-        document.getElementById('connLabel').innerText = "OFFLINE";
+        document.getElementById('connLabel').innerText = "SISTEMA OFFLINE";
     });
 
     client.on('message', (topic, msg) => {
@@ -177,23 +162,24 @@
 
             if (data.sensor2 === "ABERTO") {
                 display.innerText = "ABERTO";
-                display.className = "text-success";
+                display.className = "status-aberto";
             } 
             else if (data.sensor2 === "FECHADO") {
                 display.innerText = "FECHADO";
-                display.className = "text-danger"; // Vermelho
+                display.className = "status-fechado";
             } 
             else if (data.sensor2 === "ALERTA") {
                 display.innerText = "ALERTA";
-                display.className = "text-warning";
+                display.className = "status-aberto";
                 alert.style.display = "block";
                 audio.play().catch(() => {});
             }
             else if (data.sensor2 === "MOVIMENTO") {
                 display.innerText = "EM CURSO";
                 display.className = "";
+                display.style.color = "#ffffff";
             }
-        } catch (e) { console.log("Erro no dado recebido"); }
+        } catch (e) { console.log("Erro no processamento"); }
     });
 
     function enviarComando() {
