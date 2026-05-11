@@ -59,14 +59,15 @@
             position: relative;
         }
 
-        /* Título do Status */
+        /* Novo Título na Janela de Status */
         .status-label {
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             color: var(--blue-neon);
             text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 15px;
-            font-weight: bold;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+            font-weight: 800;
+            opacity: 0.9;
         }
 
         .card-aberto { border-color: var(--green-neon); box-shadow: 0 0 20px rgba(0, 255, 65, 0.2); }
@@ -123,10 +124,10 @@
         <div style="font-size: 0.7rem; opacity: 0.4; letter-spacing: 4px;">BOX INVERTER PRO</div>
     </header>
 
-    <!-- Card Principal Atualizado -->
     <div id="mainCard" class="status-card">
-        <div class="status-label">PORTÃO DE VEÍCULOS</div>
-        <div id="gateText" class="txt-dim">AGUARDANDO</div>
+        <!-- Título atualizado conforme solicitado -->
+        <div class="status-label">PORTÃO PRINCIPAL</div>
+        <div id="gateText" class="txt-dim">---</div>
         <div id="alertBanner">PORTÃO ABERTO</div>
     </div>
 
@@ -196,7 +197,7 @@
                 display.className = "";
             }
         } catch (e) {
-            console.error("Erro no processamento:", e);
+            console.log("Erro no JSON");
         }
     });
 
