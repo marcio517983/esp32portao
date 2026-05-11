@@ -59,6 +59,7 @@
             position: relative;
         }
 
+        /* Molduras dinâmicas baseadas no estado */
         .card-aberto { border-color: var(--green-neon); box-shadow: 0 0 20px rgba(0, 255, 65, 0.2); }
         .card-fechado { border-color: var(--red-neon); box-shadow: 0 0 20px rgba(255, 0, 60, 0.2); }
 
@@ -118,19 +119,25 @@
         <div id="alertBanner">PORTÃO ABERTO</div>
     </div>
 
+    <!-- Botão PULSO (Pino 5) -->
     <button class="btn-main" onclick="sendCmd('PULSO')">ACIONAR<br>PORTÃO</button>
     
     <div class="secondary-controls">
+        <!-- Botão AUTO (Pino 4) -->
         <button class="btn-sub" onclick="sendCmd('AUTO')">PEDESTRE</button>
+        <!-- Botão CONFIG (Pino 23 - Com Senha) -->
         <button class="btn-sub" onclick="acessoAdmin()">CONFIGURAR</button>
     </div>
 </div>
 
 <script>
+    // Configurações baseadas no seu código C++
     const broker = 'wss://e6609cbe84ae4e2b8eda83c3164e7900.s1.eu.hivemq.cloud:8884/mqtt';
     const options = {
         clientId: 'CONTROWS_WEB_' + Math.random().toString(16).substr(2, 5),
-        username: 'esp32', password: '517983lgA', clean: true
+        username: 'esp32', 
+        password: '517983lgA', 
+        clean: true
     };
 
     const ADMIN_PIN = "5179";
@@ -157,6 +164,7 @@
             const card = document.getElementById('mainCard');
             const alert = document.getElementById('alertBanner');
 
+            // Reset visual
             alert.style.display = "none";
             card.className = "status-card"; 
 
@@ -174,20 +182,24 @@
                 display.innerText = "ALERTA";
                 display.className = "txt-red";
                 card.classList.add('card-fechado');
-                alert.style.display = "block";
+                alert.style.display = "block"; // Exibe o banner "PORTÃO ABERTO"
                 audio.play().catch(() => {});
             }
             else if (data.sensor2 === "MOVIMENTO") {
                 display.innerText = "CURSO...";
                 display.className = "";
             }
-        } catch (e) { console.log("Erro no JSON"); }
+        } catch (e) {
+            console.error("Erro ao processar dados do sensor:", e);
+        }
     });
 
+    // Função para enviar os comandos (PULSO ou AUTO)
     function sendCmd(comando) {
         client.publish('esp32/esp32_01/comando', comando);
     }
 
+    // Função restrita para o comando CONFIG (Pino 23)
     function acessoAdmin() {
         const pin = prompt("ACESSO RESTRITO: PIN ADMIN");
         if (pin === ADMIN_PIN) {
