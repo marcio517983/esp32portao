@@ -49,7 +49,6 @@
             letter-spacing: -1px; font-style: italic;
         }
 
-        /* Card Central */
         .status-card {
             background: var(--card);
             padding: 40px 20px;
@@ -65,7 +64,6 @@
 
         #gateText { font-size: 3rem; font-weight: 900; margin: 0; }
 
-        /* Botões */
         .btn-main {
             width: 160px; height: 160px; border-radius: 40px;
             border: 2px solid var(--blue-neon); background: transparent;
@@ -92,7 +90,6 @@
         .btn-sub:hover { border-color: var(--blue-neon); color: var(--text); }
         .btn-sub:active { background: #222; }
 
-        /* Cores de Texto */
         .txt-green { color: var(--green-neon); text-shadow: 0 0 15px var(--green-neon); }
         .txt-red { color: var(--red-neon); text-shadow: 0 0 15px var(--red-neon); }
         .txt-dim { color: #333; }
@@ -124,7 +121,8 @@
     <button class="btn-main" onclick="sendCmd('PULSO')">ACIONAR<br>PORTÃO</button>
     
     <div class="secondary-controls">
-        <button class="btn-sub" onclick="sendCmd('AUTO')">MODO AUTO</button>
+        <!-- Nome alterado conforme solicitado -->
+        <button class="btn-sub" onclick="sendCmd('AUTO')">PESTETRE</button>
         <button class="btn-sub" onclick="acessoAdmin()">CONFIGURAR</button>
     </div>
 </div>
@@ -177,7 +175,7 @@
                 display.innerText = "ALERTA";
                 display.className = "txt-red";
                 card.classList.add('card-fechado');
-                alert.style.display = "block"; // Texto corrigido para "PORTÃO ABERTO" no HTML
+                alert.style.display = "block";
                 audio.play().catch(() => {});
             }
             else if (data.sensor2 === "MOVIMENTO") {
