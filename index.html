@@ -30,6 +30,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         /* --- TELA DE LOGIN --- */
@@ -53,6 +54,7 @@
             color: white;
             border-radius: 8px;
             box-sizing: border-box;
+            outline: none;
         }
 
         .btn-login {
@@ -65,6 +67,7 @@
             font-weight: bold;
             cursor: pointer;
             text-transform: uppercase;
+            margin-top: 10px;
         }
 
         /* --- PAINEL DE CONTROLE (Escondido) --- */
@@ -79,29 +82,31 @@
         .conn-status.online { color: var(--blue-neon); text-shadow: 0 0 10px var(--blue-neon); }
         
         .status-card { background: var(--card); padding: 30px; border-radius: 20px; margin: 20px 0; border: 2px solid #222; position: relative; }
-        .status-label { font-size: 0.8rem; color: var(--blue-neon); text-transform: uppercase; margin-bottom: 10px; }
+        .status-label { font-size: 0.8rem; color: var(--blue-neon); text-transform: uppercase; margin-bottom: 10px; font-weight: bold; }
         #gateText { font-size: 2.5rem; font-weight: 900; }
         
         .card-aberto { border-color: var(--green-neon); box-shadow: 0 0 20px rgba(0, 255, 65, 0.1); }
         .card-fechado { border-color: var(--red-neon); box-shadow: 0 0 20px rgba(255, 0, 60, 0.1); }
-        .txt-green { color: var(--green-neon); }
-        .txt-red { color: var(--red-neon); }
+        .txt-green { color: var(--green-neon); text-shadow: 0 0 10px var(--green-neon); }
+        .txt-red { color: var(--red-neon); text-shadow: 0 0 10px var(--red-neon); }
 
-        .btn-main { width: 160px; height: 160px; border-radius: 40px; border: 2px solid var(--blue-neon); background: transparent; color: var(--blue-neon); font-size: 1.1rem; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-bottom: 20px; }
+        .btn-main { width: 160px; height: 160px; border-radius: 40px; border: 2px solid var(--blue-neon); background: transparent; color: var(--blue-neon); font-size: 1.1rem; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-bottom: 20px; transition: 0.2s; }
+        .btn-main:active { transform: scale(0.95); background: var(--blue-neon); color: black; }
+
         .secondary-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .btn-sub { background: transparent; border: 1px solid #333; color: #888; padding: 12px; border-radius: 10px; font-size: 0.7rem; font-weight: bold; cursor: pointer; text-transform: uppercase; }
         
-        .user-info { font-size: 0.6rem; color: #555; margin-top: 30px; }
+        .user-info { font-size: 0.6rem; color: #555; margin-top: 30px; text-transform: uppercase; letter-spacing: 1px; }
     </style>
 </head>
 <body>
 
 <div id="loginPage">
-    <h2 style="margin-top:0; letter-spacing: 2px;">CONTROWS</h2>
-    <p style="font-size: 0.7rem; color: #666;">AUTENTICAÇÃO NECESSÁRIA</p>
+    <h2 style="margin:0; letter-spacing: 4px; color: var(--blue-neon);">CONTROWS</h2>
+    <p style="font-size: 0.7rem; color: #666; margin-bottom: 20px;">SISTEMA DE ACESSO EM NUVEM</p>
     <input type="email" id="email" placeholder="E-mail">
     <input type="password" id="password" placeholder="Senha">
-    <button class="btn-login" onclick="handleLogin()">Entrar no Sistema</button>
+    <button class="btn-login" onclick="handleLogin()">Entrar</button>
 </div>
 
 <div id="controlPanel">
@@ -109,7 +114,7 @@
     
     <div id="mainCard" class="status-card">
         <div class="status-label">PORTÃO PRINCIPAL</div>
-        <div id="gateText">---</div>
+        <div id="gateText" style="color: #444;">AGUARDANDO...</div>
     </div>
 
     <button class="btn-main" onclick="sendCmdWithLog('PULSO')">ACIONAR<br>PORTÃO</button>
@@ -123,9 +128,9 @@
 </div>
 
 <script>
-    // --- SUA CONFIGURAÇÃO DO FIREBASE (DA IMAGEM) ---
+    // --- CONFIGURAÇÃO CORRIGIDA (Zero no lugar do O) ---
     const firebaseConfig = {
-        apiKey: "AIzaSyAr9CL2mxHGwGWOqya1xYKb8iaMFh_wRRE",
+        apiKey: "AIzaSyAr9CL2mxHGwGW0qya1xYKb8iaMFh_wRRE", 
         authDomain: "controws.firebaseapp.com",
         projectId: "controws",
         storageBucket: "controws.firebasestorage.app",
@@ -134,12 +139,10 @@
         measurementId: "G-LYHQ92L334"
     };
 
-    // Inicializa Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // --- LÓGICA DE LOGIN ---
     function handleLogin() {
         const email = document.getElementById('email').value;
         const pass = document.getElementById('password').value;
@@ -149,14 +152,14 @@
                 showDashboard(userCredential.user.email);
             })
             .catch((error) => {
-                alert("Erro: " + error.message);
+                alert("Erro de Acesso: " + error.message);
             });
     }
 
     function showDashboard(email) {
         document.getElementById('loginPage').style.display = 'none';
         document.getElementById('controlPanel').style.display = 'block';
-        document.getElementById('userTag').innerText = "LOGADO COMO: " + email;
+        document.getElementById('userTag').innerText = "Usuário: " + email;
         initMQTT();
     }
 
@@ -164,13 +167,11 @@
         auth.signOut().then(() => { location.reload(); });
     }
 
-    // --- LÓGICA MQTT & LOGS ---
     let mqttClient;
-
     function initMQTT() {
         const broker = 'wss://e6609cbe84ae4e2b8eda83c3164e7900.s1.eu.hivemq.cloud:8884/mqtt';
         const options = {
-            clientId: 'WEB_' + Math.random().toString(16).substr(2, 5),
+            clientId: 'CONTROWS_' + Math.random().toString(16).substr(2, 5),
             username: 'esp32', password: '517983lgA', clean: true
         };
 
@@ -195,6 +196,10 @@
                 display.innerText = "FECHADO";
                 display.className = "txt-red";
                 card.className = "status-card card-fechado";
+            } else {
+                display.innerText = "MOVIMENTO";
+                display.className = "";
+                card.className = "status-card";
             }
         });
     }
@@ -203,22 +208,19 @@
         const user = auth.currentUser;
         if (!user) return;
 
-        // 1. Envia MQTT
         mqttClient.publish('esp32/esp32_01/comando', comando);
 
-        // 2. Grava no Banco de Dados (Firestore)
-        const acaoNome = (comando === 'PULSO') ? "Acionou Portão Principal" : "Acionou Pedestre";
+        const acaoNome = (comando === 'PULSO') ? "Abertura Total" : "Abertura Pedestre";
         
         db.collection("logs").add({
             usuario: user.email,
             acao: acaoNome,
             data: firebase.firestore.FieldValue.serverTimestamp()
         }).then(() => {
-            console.log("Ação monitorada e salva no banco!");
+            console.log("Log registrado com sucesso.");
         });
     }
 
-    // Mantém logado se atualizar a página
     auth.onAuthStateChanged((user) => {
         if (user) showDashboard(user.email);
     });
