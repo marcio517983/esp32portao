@@ -1,166 +1,205 @@
-#include <WiFi.h>
-#include <WiFiClientSecure.h>
-#include <PubSubClient.h>
-#include <WiFiManager.h> 
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CONTROWS - PREMIUM CONTROL</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
+    <style>
+        :root {
+            --bg: #050505;
+            --card: #111111;
+            --green-neon: #00ff41;
+            --red-neon: #ff003c;
+            --blue-neon: #00d2ff;
+            --text: #ffffff;
+        }
 
-// --- PINOS ---
-#define RELE_PIN 5
-#define RELE_AUTO_PIN 4
-#define RELE_ALERTA_PIN 15 
-#define RELE_CONFIG_PIN 23    
-#define SENSOR_ABERTO_PIN 18
-#define SENSOR_FECHADO_PIN 19
-#define BOTAO_RESET_WIFI 13 
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-// --- VARIÁVEIS MQTT ---
-char mqtt_server[50] = "e6609cbe84ae4e2b8eda83c3164e7900.s1.eu.hivemq.cloud";
-char mqtt_user[20]   = "esp32";
-char mqtt_pass[20]   = "517983lgA";
+        .app-container {
+            width: 90%;
+            max-width: 380px;
+            text-align: center;
+            padding: 20px 0;
+        }
 
-const int mqtt_port = 8883;
-const char* topic_comando = "esp32/esp32_01/comando";
-const char* topic_sensores = "esp32/esp32_01/sensores";
+        .conn-status {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            color: #444;
+            font-weight: bold;
+        }
+        .conn-status.online { color: var(--blue-neon); text-shadow: 0 0 10px var(--blue-neon); }
 
-// --- VARIÁVEIS DE CONTROLE ---
-unsigned long tempoPulso = 0;
-bool relePulsoAtivo = false;
-bool releAutoEstado = false;
-bool releConfigEstado = false; 
-String ultimoEstado = "";
-unsigned long tempoInicioAberto = 0;
-bool monitorandoAlerta = false;
-const unsigned long LIMITE_ALERTA = 30000; 
-unsigned long tempoBotaoPressionado = 0;
+        header h1 { 
+            margin: 0; font-size: 2.5rem; font-weight: 900; 
+            letter-spacing: -1px; font-style: italic;
+        }
 
-WiFiClientSecure espClient;
-PubSubClient client(espClient);
+        /* Card Central */
+        .status-card {
+            background: var(--card);
+            padding: 40px 20px;
+            border-radius: 20px;
+            margin: 25px 0;
+            border: 2px solid #222;
+            transition: all 0.5s ease;
+            position: relative;
+        }
 
-// --- HTML E CSS CUSTOMIZADO (Identidade CONTROWS) ---
-const char* custom_html_head = R"=====(
-<style>
-  body { background-color: #1a1a2e; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #eaeaea; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-  .container { background-color: #16213e; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 400px; text-align: center; }
-  h2 { color: #0f3460; background: #e94560; padding: 10px; border-radius: 8px; margin-bottom: 25px; font-size: 22px; text-transform: uppercase; letter-spacing: 2px; }
-  p { font-size: 14px; color: #95a5a6; margin-bottom: 20px; }
-  input[type='text'], input[type='password'] { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: none; background: #0f3460; color: white; box-sizing: border-box; }
-  button { background-color: #e94560; color: white; border: none; padding: 15px; width: 100%; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 15px; }
-  button:hover { background-color: #ff2e63; }
-  .footer { margin-top: 20px; font-size: 10px; color: #4e4e6a; }
-</style>
-)=====";
+        .card-aberto { border-color: var(--green-neon); box-shadow: 0 0 20px rgba(0, 255, 65, 0.2); }
+        .card-fechado { border-color: var(--red-neon); box-shadow: 0 0 20px rgba(255, 0, 60, 0.2); }
 
-void callback(char* topic, byte* payload, unsigned int length) {
-  String msg = "";
-  for (int i = 0; i < length; i++) msg += (char)payload[i];
-  
-  if (msg == "PULSO") { 
-    digitalWrite(RELE_PIN, LOW); tempoPulso = millis(); relePulsoAtivo = true; 
-  }
-  if (msg == "AUTO") { 
-    releAutoEstado = !releAutoEstado; digitalWrite(RELE_AUTO_PIN, releAutoEstado ? LOW : HIGH); 
-  }
-  if (msg == "CONFIG") {
-    releConfigEstado = !releConfigEstado; digitalWrite(RELE_CONFIG_PIN, releConfigEstado ? LOW : HIGH);
-  }
-}
+        #gateText { font-size: 3rem; font-weight: 900; margin: 0; }
 
-void reconnect() {
-  while (!client.connected()) {
-    String clientId = "CONTROWS-" + String(random(0xffff), HEX);
-    if (client.connect(clientId.c_str(), mqtt_user, mqtt_pass)) {
-      client.subscribe(topic_comando);
-    } else {
-      delay(5000);
+        /* Botões */
+        .btn-main {
+            width: 160px; height: 160px; border-radius: 40px;
+            border: 2px solid var(--blue-neon); background: transparent;
+            color: var(--blue-neon); font-size: 1.2rem; font-weight: bold;
+            cursor: pointer; text-transform: uppercase; transition: 0.3s;
+            box-shadow: inset 0 0 15px rgba(0, 210, 255, 0.1);
+            margin-bottom: 20px;
+        }
+        .btn-main:active { transform: scale(0.9); background: var(--blue-neon); color: #000; }
+
+        .secondary-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .btn-sub {
+            background: transparent; border: 1px solid #333; color: #888;
+            padding: 12px; border-radius: 10px; font-size: 0.75rem;
+            font-weight: bold; cursor: pointer; text-transform: uppercase;
+            transition: 0.3s;
+        }
+        .btn-sub:hover { border-color: var(--blue-neon); color: var(--text); }
+        .btn-sub:active { background: #222; }
+
+        /* Cores de Texto */
+        .txt-green { color: var(--green-neon); text-shadow: 0 0 15px var(--green-neon); }
+        .txt-red { color: var(--red-neon); text-shadow: 0 0 15px var(--red-neon); }
+        .txt-dim { color: #333; }
+
+        #alertBanner {
+            position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%);
+            background: var(--red-neon); color: white; padding: 6px 20px;
+            font-size: 0.8rem; font-weight: 900; border-radius: 5px;
+            display: none; white-space: nowrap; box-shadow: 0 0 15px var(--red-neon);
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div id="connStatus" class="conn-status">SISTEMA OFFLINE</div>
+
+    <header>
+        <h1>CONTROWS</h1>
+        <div style="font-size: 0.7rem; opacity: 0.4; letter-spacing: 4px;">BOX INVERTER PRO</div>
+    </header>
+
+    <div id="mainCard" class="status-card">
+        <div id="gateText" class="txt-dim">AGUARDANDO</div>
+        <div id="alertBanner">PORTÃO ABERTO</div>
+    </div>
+
+    <button class="btn-main" onclick="sendCmd('PULSO')">ACIONAR<br>PORTÃO</button>
+    
+    <div class="secondary-controls">
+        <button class="btn-sub" onclick="sendCmd('AUTO')">MODO AUTO</button>
+        <button class="btn-sub" onclick="acessoAdmin()">CONFIGURAR</button>
+    </div>
+</div>
+
+<script>
+    const broker = 'wss://e6609cbe84ae4e2b8eda83c3164e7900.s1.eu.hivemq.cloud:8884/mqtt';
+    const options = {
+        clientId: 'CONTROWS_WEB_' + Math.random().toString(16).substr(2, 5),
+        username: 'esp32', password: '517983lgA', clean: true
+    };
+
+    const ADMIN_PIN = "5179";
+    const audio = new Audio('https://www.soundjay.com/buttons/beep-01a.mp3');
+    let client = mqtt.connect(broker, options);
+
+    client.on('connect', () => {
+        const statusEl = document.getElementById('connStatus');
+        statusEl.innerText = "• BOX INVERTER ONLINE •";
+        statusEl.classList.add('online');
+        client.subscribe('esp32/esp32_01/sensores');
+    });
+
+    client.on('offline', () => {
+        const statusEl = document.getElementById('connStatus');
+        statusEl.innerText = "SISTEMA OFFLINE";
+        statusEl.classList.remove('online');
+    });
+
+    client.on('message', (topic, msg) => {
+        try {
+            const data = JSON.parse(msg.toString());
+            const display = document.getElementById('gateText');
+            const card = document.getElementById('mainCard');
+            const alert = document.getElementById('alertBanner');
+
+            alert.style.display = "none";
+            card.className = "status-card"; 
+
+            if (data.sensor2 === "ABERTO") {
+                display.innerText = "ABERTO";
+                display.className = "txt-green";
+                card.classList.add('card-aberto');
+            } 
+            else if (data.sensor2 === "FECHADO") {
+                display.innerText = "FECHADO";
+                display.className = "txt-red";
+                card.classList.add('card-fechado');
+            } 
+            else if (data.sensor2 === "ALERTA") {
+                display.innerText = "ALERTA";
+                display.className = "txt-red";
+                card.classList.add('card-fechado');
+                alert.style.display = "block"; // Texto corrigido para "PORTÃO ABERTO" no HTML
+                audio.play().catch(() => {});
+            }
+            else if (data.sensor2 === "MOVIMENTO") {
+                display.innerText = "CURSO...";
+                display.className = "";
+            }
+        } catch (e) { console.log("Erro no JSON"); }
+    });
+
+    function sendCmd(comando) {
+        client.publish('esp32/esp32_01/comando', comando);
     }
-  }
-}
 
-void setup() {
-  Serial.begin(115200);
-  
-  pinMode(RELE_PIN, OUTPUT); 
-  pinMode(RELE_AUTO_PIN, OUTPUT);
-  pinMode(RELE_ALERTA_PIN, OUTPUT);
-  pinMode(RELE_CONFIG_PIN, OUTPUT); 
-  pinMode(BOTAO_RESET_WIFI, INPUT_PULLUP);
-
-  digitalWrite(RELE_PIN, HIGH); digitalWrite(RELE_AUTO_PIN, HIGH);
-  digitalWrite(RELE_ALERTA_PIN, HIGH); digitalWrite(RELE_CONFIG_PIN, HIGH); 
-
-  pinMode(SENSOR_ABERTO_PIN, INPUT_PULLUP);
-  pinMode(SENSOR_FECHADO_PIN, INPUT_PULLUP);
-
-  WiFiManager wm;
-  
-  // Injeta o novo visual no portal
-  wm.setCustomHeadElement(custom_html_head);
-
-  // Criação dos parâmetros MQTT para o portal
-  WiFiManagerParameter custom_mqtt_server("server", "Broker HiveMQ", mqtt_server, 50);
-  WiFiManagerParameter custom_mqtt_user("user", "Usuário MQTT", mqtt_user, 20);
-  WiFiManagerParameter custom_mqtt_pass("pass", "Senha MQTT", mqtt_pass, 20);
-
-  wm.addParameter(&custom_mqtt_server);
-  wm.addParameter(&custom_mqtt_user);
-  wm.addParameter(&custom_mqtt_pass);
-
-  wm.setCaptivePortalEnable(true);
-  
-  // O nome da rede que aparece no Wi-Fi
-  if (!wm.autoConnect("CONTROWS_CONFIG_GATE")) {
-    delay(3000);
-    ESP.restart();
-  }
-
-  // Captura os valores digitados no portal
-  strcpy(mqtt_server, custom_mqtt_server.getValue());
-  strcpy(mqtt_user, custom_mqtt_user.getValue());
-  strcpy(mqtt_pass, custom_mqtt_pass.getValue());
-
-  espClient.setInsecure();
-  client.setServer(mqtt_server, mqtt_port);
-  client.setCallback(callback);
-}
-
-void loop() {
-  // Lógica do Botão de Reset Físico (Pino 13)
-  if (digitalRead(BOTAO_RESET_WIFI) == LOW) {
-    if (tempoBotaoPressionado == 0) tempoBotaoPressionado = millis();
-    else if (millis() - tempoBotaoPressionado > 5000) {
-      WiFiManager wm;
-      wm.resetSettings();
-      ESP.restart();
+    function acessoAdmin() {
+        const pin = prompt("ACESSO RESTRITO: PIN ADMIN");
+        if (pin === ADMIN_PIN) {
+            sendCmd('CONFIG');
+            alert("COMANDO CONFIG ENVIADO");
+        } else if (pin !== null) {
+            alert("PIN INCORRETO");
+        }
     }
-  } else { tempoBotaoPressionado = 0; }
-
-  if (!client.connected()) reconnect();
-  client.loop();
-
-  // Lógica dos Sensores e Alerta (RELE 15)
-  bool aberto = (digitalRead(SENSOR_ABERTO_PIN) == LOW);
-  bool fechado = (digitalRead(SENSOR_FECHADO_PIN) == LOW);
-
-  if (aberto) {
-    if (ultimoEstado != "ABERTO" && ultimoEstado != "ALERTA") {
-      client.publish(topic_sensores, "{\"sensor2\":\"ABERTO\"}", true);
-      ultimoEstado = "ABERTO"; tempoInicioAberto = millis(); monitorandoAlerta = true;
-    }
-    if (monitorandoAlerta && (millis() - tempoInicioAberto >= LIMITE_ALERTA)) {
-      if (ultimoEstado != "ALERTA") {
-        client.publish(topic_sensores, "{\"sensor2\":\"ALERTA\"}", true);
-        ultimoEstado = "ALERTA"; digitalWrite(RELE_ALERTA_PIN, LOW); 
-      }
-    }
-  } else {
-    digitalWrite(RELE_ALERTA_PIN, HIGH); monitorandoAlerta = false;
-    if (fechado) {
-      if (ultimoEstado != "FECHADO") { client.publish(topic_sensores, "{\"sensor2\":\"FECHADO\"}", true); ultimoEstado = "FECHADO"; }
-    } else {
-      if (ultimoEstado != "MOVIMENTO") { client.publish(topic_sensores, "{\"sensor2\":\"MOVIMENTO\"}", true); ultimoEstado = "MOVIMENTO"; }
-    }
-  }
-
-  if (relePulsoAtivo && (millis() - tempoPulso >= 3000)) {
-    digitalWrite(RELE_PIN, HIGH); relePulsoAtivo = false;
-  }
-}
+</script>
+</body>
+</html>
