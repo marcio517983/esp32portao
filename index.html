@@ -59,7 +59,6 @@
             position: relative;
         }
 
-        /* Novo Título na Janela de Status */
         .status-label {
             font-size: 0.9rem;
             color: var(--blue-neon);
@@ -94,9 +93,10 @@
 
         .btn-sub {
             background: transparent; border: 1px solid #333; color: #888;
-            padding: 12px; border-radius: 10px; font-size: 0.75rem;
+            padding: 12px; border-radius: 10px; font-size: 0.7rem;
             font-weight: bold; cursor: pointer; text-transform: uppercase;
             transition: 0.3s;
+            line-height: 1.2;
         }
         .btn-sub:hover { border-color: var(--blue-neon); color: var(--text); }
         .btn-sub:active { background: #222; }
@@ -125,7 +125,6 @@
     </header>
 
     <div id="mainCard" class="status-card">
-        <!-- Título atualizado conforme solicitado -->
         <div class="status-label">PORTÃO PRINCIPAL</div>
         <div id="gateText" class="txt-dim">---</div>
         <div id="alertBanner">PORTÃO ABERTO</div>
@@ -134,7 +133,8 @@
     <button class="btn-main" onclick="sendCmd('PULSO')">ACIONAR<br>PORTÃO</button>
     
     <div class="secondary-controls">
-        <button class="btn-sub" onclick="sendCmd('AUTO')">PEDESTRE</button>
+        <!-- Botão renomeado para Portão Pedestre -->
+        <button class="btn-sub" onclick="sendCmd('AUTO')">PORTÃO<br>PEDESTRE</button>
         <button class="btn-sub" onclick="acessoAdmin()">CONFIGURAR</button>
     </div>
 </div>
