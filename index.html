@@ -3,15 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CONTROWS - SECURE ACCESS</title>
+    <title>CONTROWS - SECURE CLOUD</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
+
     <style>
         :root {
             --bg: #050505;
             --card: #111111;
+            --blue-neon: #00d2ff;
             --green-neon: #00ff41;
             --red-neon: #ff003c;
-            --blue-neon: #00d2ff;
             --text: #ffffff;
         }
 
@@ -24,222 +30,198 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow: hidden;
         }
 
         /* --- TELA DE LOGIN --- */
-        #loginOverlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            transition: 0.5s;
-        }
-
-        .login-box {
+        #loginPage {
+            width: 90%;
+            max-width: 350px;
+            text-align: center;
             background: var(--card);
-            padding: 30px;
+            padding: 40px 20px;
             border-radius: 20px;
             border: 2px solid var(--blue-neon);
-            text-align: center;
             box-shadow: 0 0 20px rgba(0, 210, 255, 0.2);
         }
 
-        .pin-display {
-            font-size: 2rem;
-            letter-spacing: 10px;
-            margin-bottom: 20px;
-            color: var(--blue-neon);
-            height: 40px;
-        }
-
-        .keypad {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-        }
-
-        .key {
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
             background: #222;
             border: 1px solid #444;
             color: white;
-            padding: 20px;
-            font-size: 1.2rem;
-            border-radius: 10px;
-            cursor: pointer;
+            border-radius: 8px;
+            box-sizing: border-box;
         }
-        .key:active { background: var(--blue-neon); color: black; }
 
-        /* --- INTERFACE PRINCIPAL (Escondida inicialmente) --- */
-        .app-container {
-            display: none; /* Escondido até logar */
+        .btn-login {
+            width: 100%;
+            padding: 15px;
+            background: var(--blue-neon);
+            color: black;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        /* --- PAINEL DE CONTROLE (Escondido) --- */
+        #controlPanel {
+            display: none;
             width: 90%;
             max-width: 380px;
             text-align: center;
         }
 
-        /* Estilos mantidos da versão anterior */
-        .conn-status { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; color: #444; font-weight: bold; }
+        .conn-status { font-size: 0.7rem; letter-spacing: 2px; margin-bottom: 20px; color: #444; font-weight: bold; }
         .conn-status.online { color: var(--blue-neon); text-shadow: 0 0 10px var(--blue-neon); }
-        header h1 { margin: 0; font-size: 2.5rem; font-weight: 900; letter-spacing: -1px; font-style: italic; }
-        .status-card { background: var(--card); padding: 40px 20px; border-radius: 20px; margin: 25px 0; border: 2px solid #222; position: relative; }
-        .status-label { font-size: 0.9rem; color: var(--blue-neon); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 10px; font-weight: 800; }
-        .card-aberto { border-color: var(--green-neon); box-shadow: 0 0 20px rgba(0, 255, 65, 0.2); }
-        .card-fechado { border-color: var(--red-neon); box-shadow: 0 0 20px rgba(255, 0, 60, 0.2); }
-        #gateText { font-size: 3rem; font-weight: 900; margin: 0; }
-        .btn-main { width: 160px; height: 160px; border-radius: 40px; border: 2px solid var(--blue-neon); background: transparent; color: var(--blue-neon); font-size: 1.2rem; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-bottom: 20px; }
+        
+        .status-card { background: var(--card); padding: 30px; border-radius: 20px; margin: 20px 0; border: 2px solid #222; position: relative; }
+        .status-label { font-size: 0.8rem; color: var(--blue-neon); text-transform: uppercase; margin-bottom: 10px; }
+        #gateText { font-size: 2.5rem; font-weight: 900; }
+        
+        .card-aberto { border-color: var(--green-neon); box-shadow: 0 0 20px rgba(0, 255, 65, 0.1); }
+        .card-fechado { border-color: var(--red-neon); box-shadow: 0 0 20px rgba(255, 0, 60, 0.1); }
+        .txt-green { color: var(--green-neon); }
+        .txt-red { color: var(--red-neon); }
+
+        .btn-main { width: 160px; height: 160px; border-radius: 40px; border: 2px solid var(--blue-neon); background: transparent; color: var(--blue-neon); font-size: 1.1rem; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-bottom: 20px; }
         .secondary-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .btn-sub { background: transparent; border: 1px solid #333; color: #888; padding: 12px; border-radius: 10px; font-size: 0.7rem; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        .txt-green { color: var(--green-neon); text-shadow: 0 0 15px var(--green-neon); }
-        .txt-red { color: var(--red-neon); text-shadow: 0 0 15px var(--red-neon); }
-        #alertBanner { position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); background: var(--red-neon); color: white; padding: 6px 20px; font-size: 0.8rem; font-weight: 900; border-radius: 5px; display: none; }
+        
+        .user-info { font-size: 0.6rem; color: #555; margin-top: 30px; }
     </style>
 </head>
 <body>
 
-<!-- TELA DE LOGIN -->
-<div id="loginOverlay">
-    <div class="login-box">
-        <div style="font-size: 0.8rem; letter-spacing: 3px; margin-bottom: 20px;">SECURITY ACCESS</div>
-        <div id="pinDisplay" class="pin-display"></div>
-        <div class="keypad">
-            <div class="key" onclick="pressKey('1')">1</div>
-            <div class="key" onclick="pressKey('2')">2</div>
-            <div class="key" onclick="pressKey('3')">3</div>
-            <div class="key" onclick="pressKey('4')">4</div>
-            <div class="key" onclick="pressKey('5')">5</div>
-            <div class="key" onclick="pressKey('6')">6</div>
-            <div class="key" onclick="pressKey('7')">7</div>
-            <div class="key" onclick="pressKey('8')">8</div>
-            <div class="key" onclick="pressKey('9')">9</div>
-            <div class="key" onclick="clearPin()" style="color: var(--red-neon)">C</div>
-            <div class="key" onclick="pressKey('0')">0</div>
-            <div class="key" onclick="validatePin()" style="color: var(--green-neon)">OK</div>
-        </div>
-    </div>
+<div id="loginPage">
+    <h2 style="margin-top:0; letter-spacing: 2px;">CONTROWS</h2>
+    <p style="font-size: 0.7rem; color: #666;">AUTENTICAÇÃO NECESSÁRIA</p>
+    <input type="email" id="email" placeholder="E-mail">
+    <input type="password" id="password" placeholder="Senha">
+    <button class="btn-login" onclick="handleLogin()">Entrar no Sistema</button>
 </div>
 
-<!-- INTERFACE PRINCIPAL -->
-<div class="app-container" id="app">
-    <div id="connStatus" class="conn-status">SISTEMA OFFLINE</div>
-    <header>
-        <h1>CONTROWS</h1>
-        <div style="font-size: 0.7rem; opacity: 0.4; letter-spacing: 4px;">BOX INVERTER PRO</div>
-    </header>
-
+<div id="controlPanel">
+    <div id="connStatus" class="conn-status">CONECTANDO AO CLOUD...</div>
+    
     <div id="mainCard" class="status-card">
         <div class="status-label">PORTÃO PRINCIPAL</div>
-        <div id="gateText" style="color: #333;">---</div>
-        <div id="alertBanner">PORTÃO ABERTO</div>
+        <div id="gateText">---</div>
     </div>
 
-    <button class="btn-main" onclick="sendCmd('PULSO')">ACIONAR<br>PORTÃO</button>
+    <button class="btn-main" onclick="sendCmdWithLog('PULSO')">ACIONAR<br>PORTÃO</button>
     
     <div class="secondary-controls">
-        <button class="btn-sub" onclick="sendCmd('AUTO')">PORTÃO<br>PEDESTRE</button>
-        <button class="btn-sub" onclick="acessoAdmin()">CONFIGURAR</button>
+        <button class="btn-sub" onclick="sendCmdWithLog('AUTO')">PORTÃO PEDESTRE</button>
+        <button class="btn-sub" onclick="logout()">Sair</button>
     </div>
+
+    <div id="userTag" class="user-info"></div>
 </div>
 
 <script>
-    const MASTER_PIN = "5179";
-    let currentInput = "";
-
-    // Lógica de Login
-    function pressKey(num) {
-        if (currentInput.length < 4) {
-            currentInput += num;
-            document.getElementById('pinDisplay').innerText = "*".repeat(currentInput.length);
-        }
-    }
-
-    function clearPin() {
-        currentInput = "";
-        document.getElementById('pinDisplay').innerText = "";
-    }
-
-    function validatePin() {
-        if (currentInput === MASTER_PIN) {
-            sessionStorage.setItem("authenticated", "true");
-            unlockApp();
-        } else {
-            alert("ACESSO NEGADO");
-            clearPin();
-        }
-    }
-
-    function unlockApp() {
-        document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-        initMQTT(); // Só conecta ao MQTT após logar
-    }
-
-    // Verifica se já está logado ao carregar a página
-    window.onload = () => {
-        if (sessionStorage.getItem("authenticated") === "true") {
-            unlockApp();
-        }
+    // --- SUA CONFIGURAÇÃO DO FIREBASE (DA IMAGEM) ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyAr9CL2mxHGwGW0qya1xYKb8iaMFh_wRRE",
+        authDomain: "controws.firebaseapp.com",
+        projectId: "controws",
+        storageBucket: "controws.firebasestorage.app",
+        messagingSenderId: "554392538069",
+        appId: "1:554392538069:web:8cad81e0713b7b7626cb5c",
+        measurementId: "G-LYHQ92L334"
     };
 
-    // --- LÓGICA MQTT ---
+    // Inicializa Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // --- LÓGICA DE LOGIN ---
+    function handleLogin() {
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('password').value;
+
+        auth.signInWithEmailAndPassword(email, pass)
+            .then((userCredential) => {
+                showDashboard(userCredential.user.email);
+            })
+            .catch((error) => {
+                alert("Erro: " + error.message);
+            });
+    }
+
+    function showDashboard(email) {
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('controlPanel').style.display = 'block';
+        document.getElementById('userTag').innerText = "LOGADO COMO: " + email;
+        initMQTT();
+    }
+
+    function logout() {
+        auth.signOut().then(() => { location.reload(); });
+    }
+
+    // --- LÓGICA MQTT & LOGS ---
+    let mqttClient;
+
     function initMQTT() {
         const broker = 'wss://e6609cbe84ae4e2b8eda83c3164e7900.s1.eu.hivemq.cloud:8884/mqtt';
         const options = {
-            clientId: 'CONTROWS_WEB_' + Math.random().toString(16).substr(2, 5),
+            clientId: 'WEB_' + Math.random().toString(16).substr(2, 5),
             username: 'esp32', password: '517983lgA', clean: true
         };
 
-        const client = mqtt.connect(broker, options);
+        mqttClient = mqtt.connect(broker, options);
 
-        client.on('connect', () => {
+        mqttClient.on('connect', () => {
             document.getElementById('connStatus').innerText = "• BOX INVERTER ONLINE •";
             document.getElementById('connStatus').classList.add('online');
-            client.subscribe('esp32/esp32_01/sensores');
+            mqttClient.subscribe('esp32/esp32_01/sensores');
         });
 
-        client.on('message', (topic, msg) => {
+        mqttClient.on('message', (topic, msg) => {
             const data = JSON.parse(msg.toString());
             const display = document.getElementById('gateText');
             const card = document.getElementById('mainCard');
-            const alertBox = document.getElementById('alertBanner');
-
-            alertBox.style.display = "none";
-            card.className = "status-card"; 
 
             if (data.sensor2 === "ABERTO") {
                 display.innerText = "ABERTO";
                 display.className = "txt-green";
-                card.classList.add('card-aberto');
+                card.className = "status-card card-aberto";
             } else if (data.sensor2 === "FECHADO") {
                 display.innerText = "FECHADO";
                 display.className = "txt-red";
-                card.classList.add('card-fechado');
-            } else if (data.sensor2 === "ALERTA") {
-                display.innerText = "ALERTA";
-                display.className = "txt-red";
-                card.classList.add('card-fechado');
-                alertBox.style.display = "block";
-            } else if (data.sensor2 === "MOVIMENTO") {
-                display.innerText = "CURSO...";
-                display.className = "";
+                card.className = "status-card card-fechado";
             }
         });
-
-        window.sendCmd = (comando) => {
-            client.publish('esp32/esp32_01/comando', comando);
-        };
     }
 
-    function acessoAdmin() {
-        // Como o usuário já logou para entrar, aqui enviamos direto
-        // ou você pode pedir o PIN novamente para segurança extra.
-        sendCmd('CONFIG');
-        alert("COMANDO CONFIG ENVIADO");
+    function sendCmdWithLog(comando) {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        // 1. Envia MQTT
+        mqttClient.publish('esp32/esp32_01/comando', comando);
+
+        // 2. Grava no Banco de Dados (Firestore)
+        const acaoNome = (comando === 'PULSO') ? "Acionou Portão Principal" : "Acionou Pedestre";
+        
+        db.collection("logs").add({
+            usuario: user.email,
+            acao: acaoNome,
+            data: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+            console.log("Ação monitorada e salva no banco!");
+        });
     }
+
+    // Mantém logado se atualizar a página
+    auth.onAuthStateChanged((user) => {
+        if (user) showDashboard(user.email);
+    });
 </script>
 </body>
 </html>
