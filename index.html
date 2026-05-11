@@ -59,7 +59,16 @@
             position: relative;
         }
 
-        /* Molduras dinâmicas baseadas no estado */
+        /* Título do Status */
+        .status-label {
+            font-size: 0.8rem;
+            color: var(--blue-neon);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
         .card-aberto { border-color: var(--green-neon); box-shadow: 0 0 20px rgba(0, 255, 65, 0.2); }
         .card-fechado { border-color: var(--red-neon); box-shadow: 0 0 20px rgba(255, 0, 60, 0.2); }
 
@@ -114,24 +123,22 @@
         <div style="font-size: 0.7rem; opacity: 0.4; letter-spacing: 4px;">BOX INVERTER PRO</div>
     </header>
 
+    <!-- Card Principal Atualizado -->
     <div id="mainCard" class="status-card">
+        <div class="status-label">PORTÃO DE VEÍCULOS</div>
         <div id="gateText" class="txt-dim">AGUARDANDO</div>
         <div id="alertBanner">PORTÃO ABERTO</div>
     </div>
 
-    <!-- Botão PULSO (Pino 5) -->
     <button class="btn-main" onclick="sendCmd('PULSO')">ACIONAR<br>PORTÃO</button>
     
     <div class="secondary-controls">
-        <!-- Botão AUTO (Pino 4) -->
         <button class="btn-sub" onclick="sendCmd('AUTO')">PEDESTRE</button>
-        <!-- Botão CONFIG (Pino 23 - Com Senha) -->
         <button class="btn-sub" onclick="acessoAdmin()">CONFIGURAR</button>
     </div>
 </div>
 
 <script>
-    // Configurações baseadas no seu código C++
     const broker = 'wss://e6609cbe84ae4e2b8eda83c3164e7900.s1.eu.hivemq.cloud:8884/mqtt';
     const options = {
         clientId: 'CONTROWS_WEB_' + Math.random().toString(16).substr(2, 5),
@@ -164,7 +171,6 @@
             const card = document.getElementById('mainCard');
             const alert = document.getElementById('alertBanner');
 
-            // Reset visual
             alert.style.display = "none";
             card.className = "status-card"; 
 
@@ -182,7 +188,7 @@
                 display.innerText = "ALERTA";
                 display.className = "txt-red";
                 card.classList.add('card-fechado');
-                alert.style.display = "block"; // Exibe o banner "PORTÃO ABERTO"
+                alert.style.display = "block";
                 audio.play().catch(() => {});
             }
             else if (data.sensor2 === "MOVIMENTO") {
@@ -190,16 +196,14 @@
                 display.className = "";
             }
         } catch (e) {
-            console.error("Erro ao processar dados do sensor:", e);
+            console.error("Erro no processamento:", e);
         }
     });
 
-    // Função para enviar os comandos (PULSO ou AUTO)
     function sendCmd(comando) {
         client.publish('esp32/esp32_01/comando', comando);
     }
 
-    // Função restrita para o comando CONFIG (Pino 23)
     function acessoAdmin() {
         const pin = prompt("ACESSO RESTRITO: PIN ADMIN");
         if (pin === ADMIN_PIN) {
