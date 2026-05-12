@@ -113,67 +113,85 @@
             text-shadow: 0 0 10px var(--blue-neon); 
         }
         
-        .status-card { 
+        /* Estilo unificado para o Card de Status e Botões */
+        .neon-circle { 
             background: var(--card); 
-            padding: 40px 20px; 
-            border-radius: 25px; 
-            margin: 20px 0; 
-            border: 2px solid #222; 
+            width: 180px; 
+            height: 180px; 
+            border-radius: 60px; /* Formato original do botão circular */
+            border: 3px solid var(--blue-neon); 
             position: relative;
             transition: 0.5s;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 20px auto;
+            cursor: pointer;
+            box-shadow: inset 0 0 20px rgba(0, 210, 255, 0.1);
         }
-        .status-label { 
+
+        /* Efeito de clique ativo para os botões interativos */
+        .neon-circle:not(.status-display):active { 
+            transform: scale(0.92); 
+            background: var(--blue-neon); 
+            box-shadow: 0 0 30px var(--blue-neon);
+        }
+        .neon-circle:not(.status-display):active * {
+            color: black !important;
+            text-shadow: none !important;
+        }
+
+        /* O display de status não deve ser clicável */
+        .status-display {
+            cursor: default;
+        }
+
+        .circle-label { 
             font-size: 0.8rem; 
             color: var(--blue-neon); 
             text-transform: uppercase; 
-            margin-bottom: 15px; 
+            margin-bottom: 10px; 
             font-weight: 800;
             letter-spacing: 2px;
         }
-        #gateText { font-size: 3rem; font-weight: 900; letter-spacing: -1px; }
+        .main-text { 
+            font-size: 2.2rem; /* Levemente menor para caber melhor nos círculos */
+            font-weight: 900; 
+            letter-spacing: -1px; 
+            text-transform: uppercase;
+            color: var(--blue-neon);
+        }
         
-        .card-aberto { border-color: var(--green-neon); box-shadow: 0 0 25px rgba(0, 255, 65, 0.15); }
-        .card-fechado { border-color: var(--red-neon); box-shadow: 0 0 25px rgba(255, 0, 60, 0.15); }
+        /* Estados de cor para o Status e Botão Pedestre */
+        .circle-aberto { border-color: var(--green-neon); box-shadow: 0 0 25px rgba(0, 255, 65, 0.15); }
+        .circle-fechado { border-color: var(--red-neon); box-shadow: 0 0 25px rgba(255, 0, 60, 0.15); }
         .txt-green { color: var(--green-neon); text-shadow: 0 0 15px var(--green-neon); }
         .txt-red { color: var(--red-neon); text-shadow: 0 0 15px var(--red-neon); }
 
-        .btn-main { 
-            width: 180px; 
-            height: 180px; 
-            border-radius: 60px; 
-            border: 3px solid var(--blue-neon); 
-            background: transparent; 
-            color: var(--blue-neon); 
-            font-size: 1.2rem; 
-            font-weight: 900; 
-            cursor: pointer; 
-            text-transform: uppercase; 
-            margin: 30px 0;
-            box-shadow: inset 0 0 20px rgba(0, 210, 255, 0.1);
-            transition: 0.2s;
+        /* Container para os botões secundários */
+        .secondary-controls { 
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
         }
-        .btn-main:active { 
-            transform: scale(0.92); 
-            background: var(--blue-neon); 
-            color: black;
-            box-shadow: 0 0 30px var(--blue-neon);
+        
+        /* Ajuste de tamanho para os botões de pedestre e sair para não ocuparem muito espaço */
+        .secondary-controls .neon-circle {
+            width: 140px;
+            height: 140px;
+            border-radius: 45px;
+            margin: 0;
+        }
+        .secondary-controls .main-text {
+            font-size: 1.5rem;
+        }
+        .secondary-controls .circle-label {
+            font-size: 0.7rem;
+            margin-bottom: 5px;
         }
 
-        .secondary-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .btn-sub { 
-            background: #1a1a1a; 
-            border: 1px solid #333; 
-            color: #666; 
-            padding: 15px; 
-            border-radius: 15px; 
-            font-size: 0.75rem; 
-            font-weight: bold; 
-            cursor: pointer; 
-            text-transform: uppercase;
-            transition: 0.3s;
-        }
-        .btn-sub:active { border-color: white; color: white; }
-        
         .user-info { font-size: 0.65rem; color: #444; margin-top: 40px; text-transform: uppercase; letter-spacing: 1px; }
     </style>
 </head>
@@ -192,16 +210,25 @@
 <div id="controlPanel">
     <div id="connStatus" class="conn-status">CONECTANDO AO CLOUD...</div>
     
-    <div id="mainCard" class="status-card">
-        <div class="status-label">STATUS DO PORTÃO</div>
-        <div id="gateText" style="color: #222;">---</div>
+    <div id="mainCard" class="neon-circle status-display">
+        <div class="circle-label">STATUS</div>
+        <div id="gateText" class="main-text" style="color: #222;">---</div>
     </div>
 
-    <button class="btn-main" onclick="sendCmdWithLog('PULSO')">ACIONAR<br>PORTÃO</button>
+    <div class="neon-circle" onclick="sendCmdWithLog('PULSO')">
+        <div class="circle-label">PORTÃO</div>
+        <div class="main-text">ACIONAR</div>
+    </div>
     
     <div class="secondary-controls">
-        <button class="btn-sub" onclick="sendCmdWithLog('AUTO')">PEDESTRE</button>
-        <button class="btn-sub" onclick="logout()">Sair</button>
+        <div class="neon-circle" onclick="sendCmdWithLog('AUTO')">
+            <div class="circle-label">PEDESTRE</div>
+            <div class="main-text">ABRIR</div>
+        </div>
+        <div class="neon-circle" onclick="logout()">
+            <div class="circle-label">SISTEMA</div>
+            <div class="main-text">SAIR</div>
+        </div>
     </div>
 
     <div id="userTag" class="user-info"></div>
@@ -275,16 +302,16 @@
 
                 if (data.sensor2 === "ABERTO") {
                     display.innerText = "ABERTO";
-                    display.className = "txt-green";
-                    card.className = "status-card card-aberto";
+                    display.className = "main-text txt-green";
+                    card.className = "neon-circle status-display circle-aberto";
                 } else if (data.sensor2 === "FECHADO") {
                     display.innerText = "FECHADO";
-                    display.className = "txt-red";
-                    card.className = "status-card card-fechado";
+                    display.className = "main-text txt-red";
+                    card.className = "neon-circle status-display circle-fechado";
                 } else {
-                    display.innerText = "EM CURSO";
-                    display.className = "";
-                    card.className = "status-card";
+                    display.innerText = "CURSO";
+                    display.className = "main-text";
+                    card.className = "neon-circle status-display";
                 }
             } catch (e) { console.log("Erro de dados"); }
         });
