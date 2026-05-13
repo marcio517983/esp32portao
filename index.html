@@ -34,7 +34,7 @@
             overflow: hidden;
         }
 
-        /* --- MOLDURA --- */
+        /* --- MOLDURA DO CELULAR --- */
         .phone-frame {
             width: 380px;
             height: 820px;
@@ -80,6 +80,13 @@
 
         #controlPanel { display: none; width: 100%; }
 
+        /* STATUS DA CONEXÃO */
+        .conn-status {
+            font-size: 0.65rem; text-align: center; margin-bottom: 15px;
+            letter-spacing: 2px; color: #444; font-weight: bold; text-transform: uppercase;
+        }
+        .online { color: var(--blue-neon) !important; text-shadow: 0 0 8px var(--blue-neon); }
+
         .card {
             background: var(--card-bg);
             backdrop-filter: blur(12px);
@@ -103,7 +110,7 @@
 
         .grid-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         
-        /* --- ANIMAÇÃO DE ALERTA --- */
+        /* ANIMAÇÃO DE ALERTA */
         @keyframes pulse-red {
             0% { box-shadow: 0 0 10px rgba(255, 0, 60, 0.2); border-color: rgba(255, 0, 60, 0.5); }
             50% { box-shadow: 0 0 30px rgba(255, 0, 60, 0.6); border-color: var(--red-neon); }
@@ -126,23 +133,25 @@
 <div class="phone-frame">
     <div class="app-content">
         
-        <!-- LOGIN -->
+        <!-- TELA DE LOGIN -->
         <div id="loginPage">
             <div class="logo-title">CONTROWS</div>
-            <input type="email" id="email" placeholder="E-mail">
+            <input type="email" id="email" placeholder="E-mail de acesso">
             <input type="password" id="password" placeholder="Senha">
-            <button style="width:100%; padding:18px; background:var(--blue-neon); border:none; border-radius:14px; font-weight:900; cursor:pointer;" onclick="handleLogin()">ENTRAR</button>
+            <button style="width:100%; padding:18px; background:var(--blue-neon); border:none; border-radius:14px; font-weight:900; cursor:pointer; margin-top:10px;" onclick="handleLogin()">ENTRAR</button>
         </div>
 
-        <!-- PAINEL -->
+        <!-- PAINEL DE CONTROLE -->
         <div id="controlPanel">
+            <div id="connStatus" class="conn-status">BOX INVERTER OFFLINE</div>
+
             <div id="mainCard" class="card">
-                <div class="label">Status do Sistema</div>
+                <div class="label">Monitoramento de Status</div>
                 <div id="gateText" class="val">---</div>
             </div>
 
             <div id="adminBtn" class="card clickable" onclick="sendCmdWithLog('CONFIG')">
-                <div class="label">Configurações</div>
+                <div class="label">Ferramentas Admin</div>
                 <div class="val">AUTO CONFIG</div>
             </div>
 
@@ -187,7 +196,7 @@
     function handleLogin() {
         const e = document.getElementById('email').value;
         const p = document.getElementById('password').value;
-        auth.signInWithEmailAndPassword(e, p).catch(err => alert("Erro: " + err.message));
+        auth.signInWithEmailAndPassword(e, p).catch(err => alert("Acesso Negado: " + err.message));
     }
 
     function showDashboard(user) {
@@ -206,13 +215,19 @@
             username: 'esp32', password: '517983lgA', clientId: 'CONTROWS_' + Math.random().toString(16).substr(2, 5)
         });
 
+        mqttClient.on('connect', () => {
+            const st = document.getElementById('connStatus');
+            st.innerText = "BOX INVERTER SISTEMA ONLINE";
+            st.classList.add('online');
+            mqttClient.subscribe('esp32/esp32_01/sensores');
+        });
+
         mqttClient.on('message', (t, msg) => {
             try {
                 const data = JSON.parse(msg.toString());
                 const display = document.getElementById('gateText');
                 const card = document.getElementById('mainCard');
                 
-                // LÓGICA DE ALERTA PERSONALIZADA
                 if (data.sensor2.includes("ALERTA")) {
                     display.innerText = "ALERTA PORTÃO ABERTO";
                     display.className = "val text-red"; 
@@ -232,7 +247,6 @@
                 }
             } catch (e) { }
         });
-        mqttClient.on('connect', () => mqttClient.subscribe('esp32/esp32_01/sensores'));
     }
 
     function sendCmdWithLog(comando) {
