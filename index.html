@@ -21,11 +21,12 @@
             --green-neon: #00ff41;
             --red-neon: #ff003c;
             --text: #ffffff;
+            --phone-border: #1a1a1d;
         }
 
         body {
             font-family: 'Inter', 'Segoe UI', sans-serif;
-            background: radial-gradient(circle at center, #101015 0%, #050507 100%);
+            background: #000; /* Fundo externo à tela do celular */
             color: var(--text);
             margin: 0;
             display: flex;
@@ -36,42 +37,98 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        .container {
-            width: 90%;
-            max-width: 380px;
-            animation: fadeIn 0.8s ease-out;
+        /* --- MOLDURA DO CELULAR --- */
+        .phone-frame {
+            width: 380px;
+            height: 800px;
+            background: radial-gradient(circle at center, #101015 0%, #050507 100%);
+            border: 12px solid var(--phone-border);
+            border-radius: 55px;
+            position: relative;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.9), 0 0 20px rgba(0, 210, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.5s ease;
         }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Detalhe da Câmera (Notch) */
+        .phone-frame::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 25px;
+            background: var(--phone-border);
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            z-index: 100;
+        }
+
+        /* Barra Inferior de Navegação */
+        .phone-frame::after {
+            content: "";
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            z-index: 100;
+        }
+
+        /* Ajuste para telas pequenas (Celulares Reais) */
+        @media (max-width: 500px) {
+            .phone-frame {
+                width: 100vw;
+                height: 100vh;
+                border: none;
+                border-radius: 0;
+            }
+            .phone-frame::before, .phone-frame::after { display: none; }
+        }
+
+        /* --- CONTEÚDO INTERNO --- */
+        .app-content {
+            flex: 1;
+            padding: 40px 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow-y: auto;
+        }
 
         /* --- LOGIN --- */
         #loginPage {
             background: var(--card-bg);
             backdrop-filter: blur(12px);
             border: 1px solid var(--blue-neon);
-            padding: 45px 30px;
+            padding: 40px 25px;
             border-radius: 28px;
             text-align: center;
-            box-shadow: 0 0 20px rgba(0, 210, 255, 0.15);
         }
 
         .logo-title {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 900;
             letter-spacing: 5px;
             color: var(--blue-neon);
             font-style: italic;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
 
         input {
             width: 100%; padding: 16px; margin: 10px 0;
             background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
-            color: white; border-radius: 14px; box-sizing: border-box; font-size: 1rem;
+            color: white; border-radius: 14px; box-sizing: border-box;
         }
 
-        /* --- CARDS E BOTÕES COM MOLDURA UNIFICADA --- */
-        #controlPanel { display: none; }
+        /* --- CARDS E BOTÕES --- */
+        #controlPanel { display: none; width: 100%; }
 
         .conn-status {
             font-size: 0.65rem; text-align: center; margin-bottom: 20px;
@@ -79,92 +136,84 @@
         }
         .online { color: var(--blue-neon) !important; text-shadow: 0 0 8px var(--blue-neon); }
 
-        /* A "Linha em volta" unificada para todos os elementos */
         .card {
             background: var(--card-bg);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(0, 210, 255, 0.25); /* Moldura neon azul suave */
+            border: 1px solid rgba(0, 210, 255, 0.25);
             border-radius: 22px;
             padding: 25px;
             margin-bottom: 15px;
             transition: all 0.3s ease;
-            position: relative;
             text-align: center;
         }
 
         .label { font-size: 0.7rem; color: #666; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
-        .val { font-size: 2.2rem; font-weight: 900; }
+        .val { font-size: 2.1rem; font-weight: 900; }
 
-        /* Botão Principal com destaque */
-        .main-btn {
-            cursor: pointer;
-            padding: 40px 20px;
-            border-width: 1.5px; /* Linha levemente mais grossa para o principal */
-        }
+        .main-btn { cursor: pointer; padding: 40px 20px; }
 
-        /* Efeito de Clique para todos os botões (cards clicáveis) */
         .clickable:active {
             transform: scale(0.96);
             background: var(--blue-neon);
             box-shadow: 0 0 30px var(--blue-neon);
             border-color: var(--blue-neon);
         }
-        .clickable:active .val, .clickable:active .label { color: #000 !important; text-shadow: none; }
+        .clickable:active .val, .clickable:active .label { color: #000 !important; }
 
-        /* Grid de Botões Rodapé */
         .grid-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .sub-btn { cursor: pointer; padding: 20px; }
-        .sub-btn .val { font-size: 1.1rem; color: #fff; }
+        .sub-btn .val { font-size: 1rem; color: #fff; }
 
-        /* Estados de Cor Dinâmicos (Sensores) */
+        /* Estados de Cor */
         .border-green { border-color: var(--green-neon) !important; box-shadow: 0 0 20px rgba(0,255,65,0.15) !important; }
         .border-red { border-color: var(--red-neon) !important; box-shadow: 0 0 20px rgba(255,0,60,0.15) !important; }
         .text-green { color: var(--green-neon) !important; text-shadow: 0 0 10px var(--green-neon); }
         .text-red { color: var(--red-neon) !important; text-shadow: 0 0 10px var(--red-neon); }
 
-        .user-tag { font-size: 0.6rem; color: #333; text-align: center; margin-top: 30px; text-transform: uppercase; }
+        .user-tag { font-size: 0.55rem; color: #333; text-align: center; margin-top: 25px; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <!-- TELA DE LOGIN -->
-    <div id="loginPage">
-        <div class="logo-title">CONTROWS</div>
-        <input type="email" id="email" placeholder="E-mail de acesso">
-        <input type="password" id="password" placeholder="Senha">
-        <button style="width:100%; padding:18px; background:var(--blue-neon); border:none; border-radius:14px; font-weight:900; cursor:pointer; margin-top:10px;" onclick="handleLogin()">ENTRAR</button>
-    </div>
-
-    <!-- PAINEL PRINCIPAL -->
-    <div id="controlPanel">
-        <div id="connStatus" class="conn-status">SISTEMA OFFLINE</div>
-
-        <!-- Card de Status (Agora com moldura completa) -->
-        <div id="mainCard" class="card">
-            <div class="label">Monitoramento</div>
-            <div id="gateText" class="val">---</div>
+<div class="phone-frame">
+    <div class="app-content">
+        
+        <!-- TELA DE LOGIN -->
+        <div id="loginPage">
+            <div class="logo-title">CONTROWS</div>
+            <input type="email" id="email" placeholder="E-mail de acesso">
+            <input type="password" id="password" placeholder="Senha">
+            <button style="width:100%; padding:18px; background:var(--blue-neon); border:none; border-radius:14px; font-weight:900; cursor:pointer; margin-top:10px;" onclick="handleLogin()">ENTRAR</button>
         </div>
 
-        <!-- Botão Principal (Acionar) -->
-        <div class="card main-btn clickable" onclick="sendCmdWithLog('PULSO')">
-            <div class="label">Portão Principal</div>
-            <div class="val" style="color: var(--blue-neon)">ACIONAR</div>
-        </div>
+        <!-- PAINEL PRINCIPAL -->
+        <div id="controlPanel">
+            <div id="connStatus" class="conn-status">SISTEMA OFFLINE</div>
 
-        <!-- Botões Rodapé (Pedestre e Sair) -->
-        <div class="grid-footer">
-            <div class="card sub-btn clickable" onclick="sendCmdWithLog('AUTO')">
-                <div class="label">Acesso</div>
-                <div class="val">PEDESTRE</div>
+            <div id="mainCard" class="card">
+                <div class="label">Monitoramento</div>
+                <div id="gateText" class="val">---</div>
             </div>
-            <div class="card sub-btn clickable" onclick="logout()">
-                <div class="label">Sair</div>
-                <div class="val" style="color: #666">SESSÃO</div>
+
+            <div class="card main-btn clickable" onclick="sendCmdWithLog('PULSO')">
+                <div class="label">Portão Principal</div>
+                <div class="val" style="color: var(--blue-neon)">ACIONAR</div>
             </div>
+
+            <div class="grid-footer">
+                <div class="card sub-btn clickable" onclick="sendCmdWithLog('AUTO')">
+                    <div class="label">Acesso</div>
+                    <div class="val">PEDESTRE</div>
+                </div>
+                <div class="card sub-btn clickable" onclick="logout()">
+                    <div class="label">Sair</div>
+                    <div class="val" style="color: #666">SESSÃO</div>
+                </div>
+            </div>
+
+            <div id="userTag" class="user-tag"></div>
         </div>
 
-        <div id="userTag" class="user-tag"></div>
     </div>
 </div>
 
