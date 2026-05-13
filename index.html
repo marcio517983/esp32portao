@@ -3,42 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CONTROWS - ADMIN PANEL</title>
+    <title>CONTROWS - SEGURANÇA TOTAL</title>
     
-    <!-- Firebase SDKs Compat -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-    
-    <!-- Biblioteca MQTT -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
 
     <style>
         :root {
             --bg: #050507;
-            --card-bg: rgba(25, 25, 30, 0.6);
+            --card-bg: rgba(25, 25, 30, 0.7);
             --blue-neon: #00d2ff;
             --admin-gold: #ffcc00; 
             --green-neon: #00ff41;
             --red-neon: #ff003c;
-            --text: #ffffff;
+            --amber-neon: #ffaa00;
             --phone-border: #1a1a1d;
         }
 
         body {
-            font-family: 'Inter', 'Segoe UI', sans-serif;
+            font-family: 'Inter', sans-serif;
             background: #000;
-            color: var(--text);
+            color: #fff;
             margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             overflow: hidden;
-            -webkit-tap-highlight-color: transparent;
         }
 
-        /* --- MOLDURA DO CELULAR --- */
+        /* --- MOLDURA --- */
         .phone-frame {
             width: 380px;
             height: 820px;
@@ -46,24 +42,16 @@
             border: 14px solid var(--phone-border);
             border-radius: 60px;
             position: relative;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            box-shadow: 0 0 50px rgba(0,0,0,0.9);
         }
 
         .phone-frame::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 160px;
-            height: 30px;
-            background: var(--phone-border);
-            border-bottom-left-radius: 20px;
-            border-bottom-right-radius: 20px;
-            z-index: 100;
+            content: ""; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 160px; height: 30px; background: var(--phone-border);
+            border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; z-index: 100;
         }
 
         @media (max-width: 500px) {
@@ -73,10 +61,9 @@
 
         .app-content { flex: 1; padding: 50px 25px; display: flex; flex-direction: column; justify-content: center; }
 
-        /* --- UI COMPONENTS --- */
+        /* --- UI --- */
         #loginPage {
             background: var(--card-bg);
-            backdrop-filter: blur(12px);
             border: 1px solid var(--blue-neon);
             padding: 40px 25px;
             border-radius: 28px;
@@ -88,7 +75,7 @@
         input {
             width: 100%; padding: 16px; margin: 10px 0;
             background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
-            color: white; border-radius: 14px; box-sizing: border-box; font-size: 1rem;
+            color: white; border-radius: 14px; box-sizing: border-box;
         }
 
         #controlPanel { display: none; width: 100%; }
@@ -105,29 +92,31 @@
         }
 
         .label { font-size: 0.65rem; color: #666; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
-        .val { font-size: 1.8rem; font-weight: 900; }
+        .val { font-size: 1.6rem; font-weight: 900; text-transform: uppercase; }
 
         .main-btn { cursor: pointer; padding: 35px 20px; }
 
-        /* Estilo do Botão de Auto Configuração */
-        #adminBtn {
-            display: none; /* Escondido por padrão */
-            border-color: var(--admin-gold);
-            background: rgba(255, 204, 0, 0.05);
-        }
-        #adminBtn .val { color: var(--admin-gold); font-size: 1.2rem; }
+        #adminBtn { display: none; border-color: var(--admin-gold); }
+        #adminBtn .val { color: var(--admin-gold); font-size: 1.1rem; }
 
         .clickable:active { transform: scale(0.96); background: rgba(255,255,255,0.1); }
 
         .grid-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .sub-btn { cursor: pointer; padding: 15px; }
-        .sub-btn .val { font-size: 0.9rem; }
+        
+        /* --- ANIMAÇÃO DE ALERTA --- */
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 10px rgba(255, 0, 60, 0.2); border-color: rgba(255, 0, 60, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(255, 0, 60, 0.6); border-color: var(--red-neon); }
+            100% { box-shadow: 0 0 10px rgba(255, 0, 60, 0.2); border-color: rgba(255, 0, 60, 0.5); }
+        }
 
-        /* Cores Sensores */
         .border-green { border-color: var(--green-neon) !important; box-shadow: 0 0 20px rgba(0,255,65,0.15) !important; }
         .border-red { border-color: var(--red-neon) !important; box-shadow: 0 0 20px rgba(255,0,60,0.15) !important; }
-        .text-green { color: var(--green-neon) !important; text-shadow: 0 0 10px var(--green-neon); }
-        .text-red { color: var(--red-neon) !important; text-shadow: 0 0 10px var(--red-neon); }
+        .border-alert { animation: pulse-red 1.5s infinite; border-width: 2px !important; }
+        
+        .text-green { color: var(--green-neon) !important; }
+        .text-red { color: var(--red-neon) !important; }
+        .text-amber { color: var(--amber-neon) !important; }
 
         .user-tag { font-size: 0.55rem; color: #444; text-align: center; margin-top: 20px; text-transform: uppercase; }
     </style>
@@ -137,24 +126,23 @@
 <div class="phone-frame">
     <div class="app-content">
         
-        <!-- TELA DE LOGIN -->
+        <!-- LOGIN -->
         <div id="loginPage">
             <div class="logo-title">CONTROWS</div>
-            <input type="email" id="email" placeholder="E-mail de acesso">
+            <input type="email" id="email" placeholder="E-mail">
             <input type="password" id="password" placeholder="Senha">
-            <button style="width:100%; padding:18px; background:var(--blue-neon); border:none; border-radius:14px; font-weight:900; cursor:pointer; margin-top:10px;" onclick="handleLogin()">ENTRAR</button>
+            <button style="width:100%; padding:18px; background:var(--blue-neon); border:none; border-radius:14px; font-weight:900; cursor:pointer;" onclick="handleLogin()">ENTRAR</button>
         </div>
 
-        <!-- PAINEL DE CONTROLE -->
+        <!-- PAINEL -->
         <div id="controlPanel">
             <div id="mainCard" class="card">
-                <div class="label">Monitoramento</div>
+                <div class="label">Status do Sistema</div>
                 <div id="gateText" class="val">---</div>
             </div>
 
-            <!-- BOTÃO RESTRITO AO ADMINISTRADOR -->
             <div id="adminBtn" class="card clickable" onclick="sendCmdWithLog('CONFIG')">
-                <div class="label">Ferramentas de Sistema</div>
+                <div class="label">Configurações</div>
                 <div class="val">AUTO CONFIG</div>
             </div>
 
@@ -166,11 +154,11 @@
             <div class="grid-footer">
                 <div class="card sub-btn clickable" onclick="sendCmdWithLog('AUTO')">
                     <div class="label">Acesso</div>
-                    <div class="val">PEDESTRE</div>
+                    <div class="val" style="font-size:0.9rem;">PEDESTRE</div>
                 </div>
                 <div class="card sub-btn clickable" onclick="logout()">
                     <div class="label">Sair</div>
-                    <div class="val" style="color: #666">SESSÃO</div>
+                    <div class="val" style="font-size:0.9rem; color: #666">SESSÃO</div>
                 </div>
             </div>
             <div id="userTag" class="user-tag"></div>
@@ -180,7 +168,6 @@
 </div>
 
 <script>
-    // CONFIGURAÇÃO DE ACESSO
     const ADMIN_EMAIL = "controwssistemas@gmail.com"; 
 
     const firebaseConfig = {
@@ -200,19 +187,14 @@
     function handleLogin() {
         const e = document.getElementById('email').value;
         const p = document.getElementById('password').value;
-        auth.signInWithEmailAndPassword(e, p).catch(err => alert("Acesso Negado: " + err.message));
+        auth.signInWithEmailAndPassword(e, p).catch(err => alert("Erro: " + err.message));
     }
 
     function showDashboard(user) {
         document.getElementById('loginPage').style.display = 'none';
         document.getElementById('controlPanel').style.display = 'block';
-        document.getElementById('userTag').innerText = "Autenticado: " + user.email;
-
-        // VERIFICAÇÃO DE ADMINISTRADOR
-        if (user.email === ADMIN_EMAIL) {
-            document.getElementById('adminBtn').style.display = 'block';
-        }
-
+        document.getElementById('userTag').innerText = "Acesso: " + user.email;
+        if (user.email === ADMIN_EMAIL) document.getElementById('adminBtn').style.display = 'block';
         initMQTT();
     }
 
@@ -225,16 +207,30 @@
         });
 
         mqttClient.on('message', (t, msg) => {
-            const data = JSON.parse(msg.toString());
-            const display = document.getElementById('gateText');
-            const card = document.getElementById('mainCard');
-            if (data.sensor2 === "ABERTO") {
-                display.innerText = "ABERTO"; display.className = "val text-green"; card.className = "card border-green";
-            } else if (data.sensor2 === "FECHADO") {
-                display.innerText = "FECHADO"; display.className = "val text-red"; card.className = "card border-red";
-            } else {
-                display.innerText = "MOVIMENTO"; display.className = "val"; card.className = "card";
-            }
+            try {
+                const data = JSON.parse(msg.toString());
+                const display = document.getElementById('gateText');
+                const card = document.getElementById('mainCard');
+                
+                // LÓGICA DE ALERTA PERSONALIZADA
+                if (data.sensor2.includes("ALERTA")) {
+                    display.innerText = "ALERTA PORTÃO ABERTO";
+                    display.className = "val text-red"; 
+                    card.className = "card border-alert";
+                } else if (data.sensor2 === "ABERTO") {
+                    display.innerText = "ABERTO";
+                    display.className = "val text-green"; 
+                    card.className = "card border-green";
+                } else if (data.sensor2 === "FECHADO") {
+                    display.innerText = "FECHADO";
+                    display.className = "val text-red"; 
+                    card.className = "card border-red";
+                } else {
+                    display.innerText = data.sensor2; 
+                    display.className = "val text-amber"; 
+                    card.className = "card";
+                }
+            } catch (e) { }
         });
         mqttClient.on('connect', () => mqttClient.subscribe('esp32/esp32_01/sensores'));
     }
@@ -244,7 +240,7 @@
         mqttClient.publish('esp32/esp32_01/comando', comando);
         db.collection("logs").add({
             usuario: auth.currentUser.email,
-            acao: (comando === 'CONFIG') ? "Auto Configuração" : comando,
+            acao: comando,
             data: firebase.firestore.FieldValue.serverTimestamp()
         });
     }
