@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CONTROWS - BOX INVERTER PRO</title>
+    <title>CONTROWS - ADMIN PANEL</title>
     
     <!-- Firebase SDKs Compat -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     
-    <!-- MQTT Library -->
+    <!-- Biblioteca MQTT -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
 
     <style>
@@ -18,6 +18,7 @@
             --bg: #050507;
             --card-bg: rgba(25, 25, 30, 0.6);
             --blue-neon: #00d2ff;
+            --admin-gold: #ffcc00; 
             --green-neon: #00ff41;
             --red-neon: #ff003c;
             --text: #ffffff;
@@ -26,7 +27,7 @@
 
         body {
             font-family: 'Inter', 'Segoe UI', sans-serif;
-            background: #000; /* Fundo externo à tela do celular */
+            background: #000;
             color: var(--text);
             margin: 0;
             display: flex;
@@ -40,69 +41,39 @@
         /* --- MOLDURA DO CELULAR --- */
         .phone-frame {
             width: 380px;
-            height: 800px;
+            height: 820px;
             background: radial-gradient(circle at center, #101015 0%, #050507 100%);
-            border: 12px solid var(--phone-border);
-            border-radius: 55px;
+            border: 14px solid var(--phone-border);
+            border-radius: 60px;
             position: relative;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.9), 0 0 20px rgba(0, 210, 255, 0.05);
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            transition: all 0.5s ease;
         }
 
-        /* Detalhe da Câmera (Notch) */
         .phone-frame::before {
             content: "";
             position: absolute;
             top: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 150px;
-            height: 25px;
+            width: 160px;
+            height: 30px;
             background: var(--phone-border);
             border-bottom-left-radius: 20px;
             border-bottom-right-radius: 20px;
             z-index: 100;
         }
 
-        /* Barra Inferior de Navegação */
-        .phone-frame::after {
-            content: "";
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 120px;
-            height: 5px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            z-index: 100;
-        }
-
-        /* Ajuste para telas pequenas (Celulares Reais) */
         @media (max-width: 500px) {
-            .phone-frame {
-                width: 100vw;
-                height: 100vh;
-                border: none;
-                border-radius: 0;
-            }
-            .phone-frame::before, .phone-frame::after { display: none; }
+            .phone-frame { width: 100vw; height: 100vh; border: none; border-radius: 0; }
+            .phone-frame::before { display: none; }
         }
 
-        /* --- CONTEÚDO INTERNO --- */
-        .app-content {
-            flex: 1;
-            padding: 40px 25px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            overflow-y: auto;
-        }
+        .app-content { flex: 1; padding: 50px 25px; display: flex; flex-direction: column; justify-content: center; }
 
-        /* --- LOGIN --- */
+        /* --- UI COMPONENTS --- */
         #loginPage {
             background: var(--card-bg);
             backdrop-filter: blur(12px);
@@ -112,65 +83,53 @@
             text-align: center;
         }
 
-        .logo-title {
-            font-size: 1.8rem;
-            font-weight: 900;
-            letter-spacing: 5px;
-            color: var(--blue-neon);
-            font-style: italic;
-            margin-bottom: 25px;
-        }
+        .logo-title { font-size: 1.8rem; font-weight: 900; letter-spacing: 5px; color: var(--blue-neon); font-style: italic; margin-bottom: 25px; }
 
         input {
             width: 100%; padding: 16px; margin: 10px 0;
             background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
-            color: white; border-radius: 14px; box-sizing: border-box;
+            color: white; border-radius: 14px; box-sizing: border-box; font-size: 1rem;
         }
 
-        /* --- CARDS E BOTÕES --- */
         #controlPanel { display: none; width: 100%; }
-
-        .conn-status {
-            font-size: 0.65rem; text-align: center; margin-bottom: 20px;
-            letter-spacing: 2px; color: #444; font-weight: bold;
-        }
-        .online { color: var(--blue-neon) !important; text-shadow: 0 0 8px var(--blue-neon); }
 
         .card {
             background: var(--card-bg);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(0, 210, 255, 0.25);
             border-radius: 22px;
-            padding: 25px;
-            margin-bottom: 15px;
+            padding: 20px;
+            margin-bottom: 12px;
             transition: all 0.3s ease;
             text-align: center;
         }
 
-        .label { font-size: 0.7rem; color: #666; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
-        .val { font-size: 2.1rem; font-weight: 900; }
+        .label { font-size: 0.65rem; color: #666; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
+        .val { font-size: 1.8rem; font-weight: 900; }
 
-        .main-btn { cursor: pointer; padding: 40px 20px; }
+        .main-btn { cursor: pointer; padding: 35px 20px; }
 
-        .clickable:active {
-            transform: scale(0.96);
-            background: var(--blue-neon);
-            box-shadow: 0 0 30px var(--blue-neon);
-            border-color: var(--blue-neon);
+        /* Estilo do Botão de Auto Configuração */
+        #adminBtn {
+            display: none; /* Escondido por padrão */
+            border-color: var(--admin-gold);
+            background: rgba(255, 204, 0, 0.05);
         }
-        .clickable:active .val, .clickable:active .label { color: #000 !important; }
+        #adminBtn .val { color: var(--admin-gold); font-size: 1.2rem; }
 
-        .grid-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .sub-btn { cursor: pointer; padding: 20px; }
-        .sub-btn .val { font-size: 1rem; color: #fff; }
+        .clickable:active { transform: scale(0.96); background: rgba(255,255,255,0.1); }
 
-        /* Estados de Cor */
+        .grid-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .sub-btn { cursor: pointer; padding: 15px; }
+        .sub-btn .val { font-size: 0.9rem; }
+
+        /* Cores Sensores */
         .border-green { border-color: var(--green-neon) !important; box-shadow: 0 0 20px rgba(0,255,65,0.15) !important; }
         .border-red { border-color: var(--red-neon) !important; box-shadow: 0 0 20px rgba(255,0,60,0.15) !important; }
         .text-green { color: var(--green-neon) !important; text-shadow: 0 0 10px var(--green-neon); }
         .text-red { color: var(--red-neon) !important; text-shadow: 0 0 10px var(--red-neon); }
 
-        .user-tag { font-size: 0.55rem; color: #333; text-align: center; margin-top: 25px; text-transform: uppercase; }
+        .user-tag { font-size: 0.55rem; color: #444; text-align: center; margin-top: 20px; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -186,13 +145,17 @@
             <button style="width:100%; padding:18px; background:var(--blue-neon); border:none; border-radius:14px; font-weight:900; cursor:pointer; margin-top:10px;" onclick="handleLogin()">ENTRAR</button>
         </div>
 
-        <!-- PAINEL PRINCIPAL -->
+        <!-- PAINEL DE CONTROLE -->
         <div id="controlPanel">
-            <div id="connStatus" class="conn-status">SISTEMA OFFLINE</div>
-
             <div id="mainCard" class="card">
                 <div class="label">Monitoramento</div>
                 <div id="gateText" class="val">---</div>
+            </div>
+
+            <!-- BOTÃO RESTRITO AO ADMINISTRADOR -->
+            <div id="adminBtn" class="card clickable" onclick="sendCmdWithLog('CONFIG')">
+                <div class="label">Ferramentas de Sistema</div>
+                <div class="val">AUTO CONFIG</div>
             </div>
 
             <div class="card main-btn clickable" onclick="sendCmdWithLog('PULSO')">
@@ -210,7 +173,6 @@
                     <div class="val" style="color: #666">SESSÃO</div>
                 </div>
             </div>
-
             <div id="userTag" class="user-tag"></div>
         </div>
 
@@ -218,6 +180,9 @@
 </div>
 
 <script>
+    // CONFIGURAÇÃO DE ACESSO
+    const ADMIN_EMAIL = "controwssistemas@gmail.com"; 
+
     const firebaseConfig = {
         apiKey: "AIzaSyBu4LrzBcnxtdCuFI2LWMRYQstRttEE5xM",
         authDomain: "controws.firebaseapp.com",
@@ -235,13 +200,19 @@
     function handleLogin() {
         const e = document.getElementById('email').value;
         const p = document.getElementById('password').value;
-        auth.signInWithEmailAndPassword(e, p).catch(err => alert("Erro: " + err.message));
+        auth.signInWithEmailAndPassword(e, p).catch(err => alert("Acesso Negado: " + err.message));
     }
 
-    function showDashboard(email) {
+    function showDashboard(user) {
         document.getElementById('loginPage').style.display = 'none';
         document.getElementById('controlPanel').style.display = 'block';
-        document.getElementById('userTag').innerText = "Acesso: " + email;
+        document.getElementById('userTag').innerText = "Autenticado: " + user.email;
+
+        // VERIFICAÇÃO DE ADMINISTRADOR
+        if (user.email === ADMIN_EMAIL) {
+            document.getElementById('adminBtn').style.display = 'block';
+        }
+
         initMQTT();
     }
 
@@ -253,32 +224,19 @@
             username: 'esp32', password: '517983lgA', clientId: 'CONTROWS_' + Math.random().toString(16).substr(2, 5)
         });
 
-        mqttClient.on('connect', () => {
-            const st = document.getElementById('connStatus');
-            st.innerText = "BOX INVERTER ONLINE";
-            st.classList.add('online');
-            mqttClient.subscribe('esp32/esp32_01/sensores');
-        });
-
         mqttClient.on('message', (t, msg) => {
             const data = JSON.parse(msg.toString());
             const display = document.getElementById('gateText');
             const card = document.getElementById('mainCard');
-
             if (data.sensor2 === "ABERTO") {
-                display.innerText = "ABERTO";
-                display.className = "val text-green";
-                card.className = "card border-green";
+                display.innerText = "ABERTO"; display.className = "val text-green"; card.className = "card border-green";
             } else if (data.sensor2 === "FECHADO") {
-                display.innerText = "FECHADO";
-                display.className = "val text-red";
-                card.className = "card border-red";
+                display.innerText = "FECHADO"; display.className = "val text-red"; card.className = "card border-red";
             } else {
-                display.innerText = "MOVIMENTO";
-                display.className = "val";
-                card.className = "card";
+                display.innerText = "MOVIMENTO"; display.className = "val"; card.className = "card";
             }
         });
+        mqttClient.on('connect', () => mqttClient.subscribe('esp32/esp32_01/sensores'));
     }
 
     function sendCmdWithLog(comando) {
@@ -286,12 +244,12 @@
         mqttClient.publish('esp32/esp32_01/comando', comando);
         db.collection("logs").add({
             usuario: auth.currentUser.email,
-            acao: (comando === 'PULSO') ? "Abertura Total" : "Abertura Pedestre",
+            acao: (comando === 'CONFIG') ? "Auto Configuração" : comando,
             data: firebase.firestore.FieldValue.serverTimestamp()
         });
     }
 
-    auth.onAuthStateChanged(user => { if (user) showDashboard(user.email); });
+    auth.onAuthStateChanged(user => { if (user) showDashboard(user); });
 </script>
 </body>
 </html>
