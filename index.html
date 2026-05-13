@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CONTROWS - SEGURANÇA TOTAL</title>
     
-    <!-- SDKs Firebase Compat (v9) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-    <!-- MQTT Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
 
     <style>
@@ -63,8 +61,15 @@
 
         .app-content { flex: 1; padding: 50px 25px; display: flex; flex-direction: column; justify-content: center; }
 
-        /* --- UI PAGES --- */
-        .page { background: var(--card-bg); border: 1px solid var(--blue-neon); padding: 40px 25px; border-radius: 28px; text-align: center; }
+        /* --- UI --- */
+        #loginPage {
+            background: var(--card-bg);
+            border: 1px solid var(--blue-neon);
+            padding: 40px 25px;
+            border-radius: 28px;
+            text-align: center;
+        }
+
         .logo-title { font-size: 1.8rem; font-weight: 900; letter-spacing: 5px; color: var(--blue-neon); font-style: italic; margin-bottom: 25px; }
 
         input {
@@ -73,8 +78,9 @@
             color: white; border-radius: 14px; box-sizing: border-box;
         }
 
-        #controlPanel, #passwordUpdatePage { display: none; width: 100%; }
+        #controlPanel { display: none; width: 100%; }
 
+        /* STATUS DA CONEXÃO */
         .conn-status {
             font-size: 0.65rem; text-align: center; margin-bottom: 15px;
             letter-spacing: 2px; color: #444; font-weight: bold; text-transform: uppercase;
@@ -96,12 +102,15 @@
         .val { font-size: 1.6rem; font-weight: 900; text-transform: uppercase; }
 
         .main-btn { cursor: pointer; padding: 35px 20px; }
+
         #adminBtn { display: none; border-color: var(--admin-gold); }
         #adminBtn .val { color: var(--admin-gold); font-size: 1.1rem; }
+
         .clickable:active { transform: scale(0.96); background: rgba(255,255,255,0.1); }
 
         .grid-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         
+        /* ANIMAÇÃO DE ALERTA */
         @keyframes pulse-red {
             0% { box-shadow: 0 0 10px rgba(255, 0, 60, 0.2); border-color: rgba(255, 0, 60, 0.5); }
             50% { box-shadow: 0 0 30px rgba(255, 0, 60, 0.6); border-color: var(--red-neon); }
@@ -116,7 +125,6 @@
         .text-red { color: var(--red-neon) !important; }
         .text-amber { color: var(--amber-neon) !important; }
 
-        .action-btn { width:100%; padding:18px; background:var(--blue-neon); border:none; border-radius:14px; font-weight:900; cursor:pointer; margin-top:10px; color: #000; }
         .user-tag { font-size: 0.55rem; color: #444; text-align: center; margin-top: 20px; text-transform: uppercase; }
     </style>
 </head>
@@ -126,25 +134,16 @@
     <div class="app-content">
         
         <!-- TELA DE LOGIN -->
-        <div id="loginPage" class="page">
+        <div id="loginPage">
             <div class="logo-title">CONTROWS</div>
             <input type="email" id="email" placeholder="E-mail de acesso">
             <input type="password" id="password" placeholder="Senha">
-            <button class="action-btn" onclick="handleLogin()">ENTRAR</button>
-        </div>
-
-        <!-- TELA DE ATUALIZAÇÃO DE SENHA -->
-        <div id="passwordUpdatePage" class="page">
-            <div class="logo-title" style="font-size: 1.2rem; color: var(--amber-neon);">CONFIGURAÇÃO DE SEGURANÇA</div>
-            <p style="font-size: 0.7rem; color: #888; margin-bottom: 15px;">Detectamos o uso da senha padrão. Por favor, cadastre uma nova senha pessoal.</p>
-            <input type="password" id="newPassword" placeholder="Nova Senha">
-            <input type="password" id="confirmPassword" placeholder="Confirme a Nova Senha">
-            <button class="action-btn" style="background: var(--amber-neon);" onclick="handlePasswordUpdate()">ATUALIZAR ACESSO</button>
+            <button style="width:100%; padding:18px; background:var(--blue-neon); border:none; border-radius:14px; font-weight:900; cursor:pointer; margin-top:10px;" onclick="handleLogin()">ENTRAR</button>
         </div>
 
         <!-- PAINEL DE CONTROLE -->
         <div id="controlPanel">
-            <div id="connStatus" class="conn-status">SISTEMA OFFLINE</div>
+            <div id="connStatus" class="conn-status">BOX INVERTER OFFLINE</div>
 
             <div id="mainCard" class="card">
                 <div class="label">Monitoramento de Status</div>
@@ -179,8 +178,6 @@
 
 <script>
     const ADMIN_EMAIL = "controwssistemas@gmail.com"; 
-    const SUFIXO_OCULTO = "C@wS*";[cite: 2]
-    const SENHA_PADRAO_VISIVEL = "123456";[cite: 2]
 
     const firebaseConfig = {
         apiKey: "AIzaSyBu4LrzBcnxtdCuFI2LWMRYQstRttEE5xM",
@@ -192,68 +189,26 @@
         measurementId: "G-H1GEH28EVB"
     };
 
-    // Inicialização Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    let senhaDigitadaNoLogin = ""; // Captura para verificar se é a senha padrão
-
-    // --- LÓGICA DE LOGIN ---
     function handleLogin() {
-        const email = document.getElementById('email').value;
-        const senha = document.getElementById('password').value;
-        senhaDigitadaNoLogin = senha;
-
-        // Injeta o sufixo invisivelmente antes de validar no Firebase[cite: 2]
-        auth.signInWithEmailAndPassword(email, senha + SUFIXO_OCULTO)
-            .catch(err => alert("Acesso Negado: " + err.message));
+        const e = document.getElementById('email').value;
+        const p = document.getElementById('password').value;
+        auth.signInWithEmailAndPassword(e, p).catch(err => alert("Acesso Negado: " + err.message));
     }
 
-    // --- LÓGICA DE ATUALIZAÇÃO DE SENHA ---
-    function handlePasswordUpdate() {
-        const p1 = document.getElementById('newPassword').value;
-        const p2 = document.getElementById('confirmPassword').value;
-        const user = auth.currentUser;
-
-        if (p1 !== p2) return alert("As senhas não coincidem!");
-        if (p1.length < 6) return alert("A senha deve ter pelo menos 6 caracteres.");
-        if (p1 === SENHA_PADRAO_VISIVEL) return alert("A nova senha não pode ser a senha padrão.");
-
-        // Adiciona o sufixo ocultamente e atualiza o Firebase[cite: 2]
-        const senhaFinalProtegida = p1 + SUFIXO_OCULTO; 
-
-        user.updatePassword(senhaFinalProtegida).then(() => {
-            alert("Senha atualizada com sucesso! Por favor, faça login novamente.");
-            senhaDigitadaNoLogin = ""; 
-            logout(); 
-        }).catch(err => alert("Erro na atualização: " + err.message));
-    }
-
-    // --- PAINEL DE CONTROLE ---
     function showDashboard(user) {
-        // Se utilizou a senha padrão, bloqueia o painel e abre a tela de troca[cite: 2]
-        if (senhaDigitadaNoLogin === SENHA_PADRAO_VISIVEL) {
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('passwordUpdatePage').style.display = 'block';
-            return;
-        }
-
         document.getElementById('loginPage').style.display = 'none';
-        document.getElementById('passwordUpdatePage').style.display = 'none';
         document.getElementById('controlPanel').style.display = 'block';
         document.getElementById('userTag').innerText = "Acesso: " + user.email;
-        
-        if (user.email === ADMIN_EMAIL) {
-            document.getElementById('adminBtn').style.display = 'block';
-        }
-        
+        if (user.email === ADMIN_EMAIL) document.getElementById('adminBtn').style.display = 'block';
         initMQTT();
     }
 
     function logout() { auth.signOut().then(() => location.reload()); }
 
-    // --- COMUNICAÇÃO MQTT ---
     let mqttClient;
     function initMQTT() {
         mqttClient = mqtt.connect('wss://e6609cbe84ae4e2b8eda83c3164e7900.s1.eu.hivemq.cloud:8884/mqtt', {
@@ -262,7 +217,7 @@
 
         mqttClient.on('connect', () => {
             const st = document.getElementById('connStatus');
-            st.innerText = "SISTEMA ONLINE";
+            st.innerText = "BOX INVERTER SISTEMA ONLINE";
             st.classList.add('online');
             mqttClient.subscribe('esp32/esp32_01/sensores');
         });
@@ -274,7 +229,7 @@
                 const card = document.getElementById('mainCard');
                 
                 if (data.sensor2.includes("ALERTA")) {
-                    display.innerText = "ALERTA ABERTO";
+                    display.innerText = "ALERTA PORTÃO ABERTO";
                     display.className = "val text-red"; 
                     card.className = "card border-alert";
                 } else if (data.sensor2 === "ABERTO") {
@@ -304,7 +259,6 @@
         });
     }
 
-    // Monitor de Estado de Autenticação
     auth.onAuthStateChanged(user => { if (user) showDashboard(user); });
 </script>
 </body>
