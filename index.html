@@ -48,11 +48,11 @@
         #loginPage {
             background: var(--card-bg);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(0, 210, 255, 0.3);
+            border: 1px solid var(--blue-neon);
             padding: 45px 30px;
             border-radius: 28px;
             text-align: center;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.15);
         }
 
         .logo-title {
@@ -68,12 +68,9 @@
             width: 100%; padding: 16px; margin: 10px 0;
             background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
             color: white; border-radius: 14px; box-sizing: border-box; font-size: 1rem;
-            transition: 0.3s;
         }
 
-        input:focus { border-color: var(--blue-neon); background: rgba(255,255,255,0.07); outline: none; }
-
-        /* --- CARDS E BOTÕES HARMÔNICOS --- */
+        /* --- CARDS E BOTÕES COM MOLDURA UNIFICADA --- */
         #controlPanel { display: none; }
 
         .conn-status {
@@ -82,50 +79,46 @@
         }
         .online { color: var(--blue-neon) !important; text-shadow: 0 0 8px var(--blue-neon); }
 
+        /* A "Linha em volta" unificada para todos os elementos */
         .card {
             background: var(--card-bg);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(0, 210, 255, 0.25); /* Moldura neon azul suave */
             border-radius: 22px;
             padding: 25px;
             margin-bottom: 15px;
             transition: all 0.3s ease;
             position: relative;
+            text-align: center;
         }
-
-        .status-card { text-align: center; border-bottom: 3px solid rgba(255,255,255,0.05); }
 
         .label { font-size: 0.7rem; color: #666; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
         .val { font-size: 2.2rem; font-weight: 900; }
 
-        /* Botão Principal Estilizado */
+        /* Botão Principal com destaque */
         .main-btn {
             cursor: pointer;
-            text-align: center;
-            border: 1px solid rgba(0, 210, 255, 0.2);
             padding: 40px 20px;
+            border-width: 1.5px; /* Linha levemente mais grossa para o principal */
         }
 
-        .main-btn:hover { border-color: var(--blue-neon); box-shadow: 0 0 20px rgba(0, 210, 255, 0.1); }
-
-        .main-btn:active {
+        /* Efeito de Clique para todos os botões (cards clicáveis) */
+        .clickable:active {
             transform: scale(0.96);
             background: var(--blue-neon);
             box-shadow: 0 0 30px var(--blue-neon);
+            border-color: var(--blue-neon);
         }
-        .main-btn:active .val, .main-btn:active .label { color: #000 !important; }
+        .clickable:active .val, .clickable:active .label { color: #000 !important; text-shadow: none; }
 
-        /* Grid de Botões Secundários */
+        /* Grid de Botões Rodapé */
         .grid-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-
-        .sub-btn { cursor: pointer; text-align: center; padding: 20px; }
+        .sub-btn { cursor: pointer; padding: 20px; }
         .sub-btn .val { font-size: 1.1rem; color: #fff; }
 
-        .sub-btn:active { border-color: #fff; transform: scale(0.95); }
-
-        /* Estados de Cor */
-        .border-green { border-color: var(--green-neon) !important; box-shadow: 0 0 20px rgba(0,255,65,0.1); }
-        .border-red { border-color: var(--red-neon) !important; box-shadow: 0 0 20px rgba(255,0,60,0.1); }
+        /* Estados de Cor Dinâmicos (Sensores) */
+        .border-green { border-color: var(--green-neon) !important; box-shadow: 0 0 20px rgba(0,255,65,0.15) !important; }
+        .border-red { border-color: var(--red-neon) !important; box-shadow: 0 0 20px rgba(255,0,60,0.15) !important; }
         .text-green { color: var(--green-neon) !important; text-shadow: 0 0 10px var(--green-neon); }
         .text-red { color: var(--red-neon) !important; text-shadow: 0 0 10px var(--red-neon); }
 
@@ -147,25 +140,25 @@
     <div id="controlPanel">
         <div id="connStatus" class="conn-status">SISTEMA OFFLINE</div>
 
-        <!-- Card de Status -->
-        <div id="mainCard" class="card status-card">
+        <!-- Card de Status (Agora com moldura completa) -->
+        <div id="mainCard" class="card">
             <div class="label">Monitoramento</div>
             <div id="gateText" class="val">---</div>
         </div>
 
-        <!-- Botão Principal -->
-        <div class="card main-btn" onclick="sendCmdWithLog('PULSO')">
+        <!-- Botão Principal (Acionar) -->
+        <div class="card main-btn clickable" onclick="sendCmdWithLog('PULSO')">
             <div class="label">Portão Principal</div>
             <div class="val" style="color: var(--blue-neon)">ACIONAR</div>
         </div>
 
-        <!-- Botões Rodapé -->
+        <!-- Botões Rodapé (Pedestre e Sair) -->
         <div class="grid-footer">
-            <div class="card sub-btn" onclick="sendCmdWithLog('AUTO')">
+            <div class="card sub-btn clickable" onclick="sendCmdWithLog('AUTO')">
                 <div class="label">Acesso</div>
                 <div class="val">PEDESTRE</div>
             </div>
-            <div class="card sub-btn" onclick="logout()">
+            <div class="card sub-btn clickable" onclick="logout()">
                 <div class="label">Sair</div>
                 <div class="val" style="color: #666">SESSÃO</div>
             </div>
@@ -226,15 +219,15 @@
             if (data.sensor2 === "ABERTO") {
                 display.innerText = "ABERTO";
                 display.className = "val text-green";
-                card.className = "card status-card border-green";
+                card.className = "card border-green";
             } else if (data.sensor2 === "FECHADO") {
                 display.innerText = "FECHADO";
                 display.className = "val text-red";
-                card.className = "card status-card border-red";
+                card.className = "card border-red";
             } else {
                 display.innerText = "MOVIMENTO";
                 display.className = "val";
-                card.className = "card status-card";
+                card.className = "card";
             }
         });
     }
