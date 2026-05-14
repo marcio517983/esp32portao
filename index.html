@@ -34,7 +34,6 @@
             overflow: hidden;
         }
 
-        /* --- MOLDURA DO CELULAR --- */
         .phone-frame {
             width: 380px;
             height: 820px;
@@ -61,14 +60,15 @@
 
         .app-content { flex: 1; padding: 50px 25px; display: flex; flex-direction: column; justify-content: center; }
 
-        /* --- UI --- */
-        #loginPage {
+        #loginPage, #blockedPage {
             background: var(--card-bg);
             border: 1px solid var(--blue-neon);
             padding: 40px 25px;
             border-radius: 28px;
             text-align: center;
         }
+
+        #blockedPage { border-color: var(--red-neon); display: none; }
 
         .logo-title { font-size: 1.8rem; font-weight: 900; letter-spacing: 5px; color: var(--blue-neon); font-style: italic; margin-bottom: 25px; }
 
@@ -139,6 +139,13 @@
             <button style="width:100%; padding:18px; background:var(--blue-neon); border:none; border-radius:14px; font-weight:900; cursor:pointer; margin-top:10px;" onclick="handleLogin()">ENTRAR</button>
         </div>
 
+        <!-- TELA DE BLOQUEIO (LINK COMPARTILHADO) -->
+        <div id="blockedPage">
+            <div class="logo-title" style="color: var(--red-neon)">BLOQUEADO</div>
+            <p style="font-size: 0.8rem; color: #ccc;">Este link não pode ser compartilhado. Acesso permitido apenas no dispositivo original.</p>
+            <button style="width:100%; padding:18px; background:var(--red-neon); border:none; border-radius:14px; font-weight:900; cursor:pointer; margin-top:10px;" onclick="location.reload()">RELOGAR</button>
+        </div>
+
         <!-- PAINEL DE CONTROLE -->
         <div id="controlPanel">
             <div id="connStatus" class="conn-status">BOX INVERTER OFFLINE</div>
@@ -176,7 +183,7 @@
 
 <script>
     const ADMIN_EMAIL = "controwssistemas@gmail.com"; 
-    const PASS_SUFFIX = "C@wS*"; // O sufixo secreto
+    const PASS_SUFFIX = "C@wS*";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBu4LrzBcnxtdCuFI2LWMRYQstRttEE5xM",
@@ -192,21 +199,54 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    // Função para gerar uma identidade única para o navegador/aparelho
+    function getDeviceId() {
+        let id = localStorage.getItem('controws_device_id');
+        if (!id) {
+            id = 'DEV-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+            localStorage.setItem('controws_device_id', id);
+        }
+        return id;
+    }
+
     function handleLogin() {
         const e = document.getElementById('email').value;
         const p = document.getElementById('password').value;
-        
-        // Aplicação Oculta do Sufixo Secreto
         const secretPassword = p + PASS_SUFFIX;
         
-        auth.signInWithEmailAndPassword(e, secretPassword).catch(err => {
-            // Se der erro, mostramos o erro original do Firebase
-            alert("Acesso Negado: " + err.message);
-        });
+        auth.signInWithEmailAndPassword(e, secretPassword).then((userCredential) => {
+            checkDeviceLink(userCredential.user);
+        }).catch(err => alert("Acesso Negado: " + err.message));
+    }
+
+    async function checkDeviceLink(user) {
+        const currentDeviceId = getDeviceId();
+        const userRef = db.collection("dispositivos_autorizados").doc(user.email);
+        const doc = await userRef.get();
+
+        if (doc.exists) {
+            // Se já existe um vínculo, verifica se é o mesmo aparelho
+            if (doc.data().deviceId === currentDeviceId) {
+                showDashboard(user);
+            } else {
+                // APARELHO DIFERENTE: BLOQUEIA
+                auth.signOut();
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('blockedPage').style.display = 'block';
+            }
+        } else {
+            // PRIMEIRO ACESSO: Cria o vínculo com este aparelho
+            await userRef.set({
+                deviceId: currentDeviceId,
+                vinculadoEm: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showDashboard(user);
+        }
     }
 
     function showDashboard(user) {
         document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('blockedPage').style.display = 'none';
         document.getElementById('controlPanel').style.display = 'block';
         document.getElementById('userTag').innerText = "Acesso: " + user.email;
         if (user.email === ADMIN_EMAIL) document.getElementById('adminBtn').style.display = 'block';
@@ -265,7 +305,7 @@
         });
     }
 
-    auth.onAuthStateChanged(user => { if (user) showDashboard(user); });
+    auth.onAuthStateChanged(user => { if (user) checkDeviceLink(user); });
 </script>
 </body>
 </html>
