@@ -12,20 +12,22 @@
 
     <style>
         :root {
-            --bg: #050507;
-            --card-bg: rgba(25, 25, 30, 0.7);
-            --blue-neon: #00d2ff;
-            --admin-gold: #ffcc00; 
-            --green-neon: #00ff41;
-            --red-neon: #ff003c;
-            --amber-neon: #ffaa00;
-            --phone-border: #1a1a1d;
+            --bg: #f5f6fa; /* Fundo claro e moderno */
+            --card-bg: #ffffff; /* Cartões brancos para alto contraste */
+            --text-main: #1e2229; /* Texto principal escuro */
+            --text-sub: #7f8c8d; /* Textos secundários */
+            --blue-neon: #00a8ff; /* Ajustado para melhor leitura no claro */
+            --admin-gold: #d4af37; /* Dourado mais fechado para fundo claro */
+            --green-neon: #2ecc71;
+            --red-neon: #e74c3c;
+            --amber-neon: #e67e22;
+            --phone-border: #2c3e50; /* Moldura do celular mais sóbria */
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background: #000;
-            color: #fff;
+            background: #e9ecef;
+            color: var(--text-main);
             margin: 0;
             display: flex;
             justify-content: center;
@@ -38,14 +40,14 @@
         .phone-frame {
             width: 380px;
             height: 820px;
-            background: radial-gradient(circle at center, #101015 0%, #050507 100%);
+            background: var(--bg);
             border: 14px solid var(--phone-border);
             border-radius: 60px;
             position: relative;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            box-shadow: 0 0 50px rgba(0,0,0,0.9);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
         }
 
         .phone-frame::before {
@@ -64,10 +66,11 @@
         /* --- UI --- */
         #loginPage, #deviceAuthPage {
             background: var(--card-bg);
-            border: 1px solid var(--blue-neon);
+            border: 1px solid rgba(0, 168, 255, 0.3);
             padding: 40px 25px;
             border-radius: 28px;
             text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
         }
 
         #deviceAuthPage { display: none; border-color: var(--amber-neon); }
@@ -76,8 +79,13 @@
 
         input {
             width: 100%; padding: 16px; margin: 10px 0;
-            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
-            color: white; border-radius: 14px; box-sizing: border-box;
+            background: #f8f9fa; border: 1px solid #ced4da;
+            color: var(--text-main); border-radius: 14px; box-sizing: border-box;
+            font-size: 1rem;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--blue-neon);
         }
 
         #controlPanel { display: none; width: 100%; }
@@ -85,23 +93,23 @@
         /* STATUS DA CONEXÃO */
         .conn-status {
             font-size: 0.65rem; text-align: center; margin-bottom: 15px;
-            letter-spacing: 2px; color: #444; font-weight: bold; text-transform: uppercase;
+            letter-spacing: 2px; color: #95a5a6; font-weight: bold; text-transform: uppercase;
         }
-        .online { color: var(--blue-neon) !important; text-shadow: 0 0 8px var(--blue-neon); }
+        .online { color: var(--blue-neon) !important; text-shadow: 0 0 4px rgba(0, 168, 255, 0.2); }
 
         .card {
             background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(0, 210, 255, 0.25);
+            border: 1px solid rgba(0, 168, 255, 0.15);
             border-radius: 22px;
             padding: 20px;
             margin-bottom: 12px;
             transition: all 0.3s ease;
             text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
         }
 
-        .label { font-size: 0.65rem; color: #666; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
-        .val { font-size: 1.6rem; font-weight: 900; text-transform: uppercase; }
+        .label { font-size: 0.65rem; color: var(--text-sub); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
+        .val { font-size: 1.6rem; font-weight: 900; text-transform: uppercase; color: var(--text-main); }
 
         .main-btn { cursor: pointer; padding: 35px 20px; }
 
@@ -111,27 +119,27 @@
         .admin-card { border-color: var(--admin-gold) !important; }
         .admin-card .val { color: var(--admin-gold); font-size: 0.9rem; }
 
-        .clickable:active { transform: scale(0.96); background: rgba(255,255,255,0.1); }
+        .clickable:active { transform: scale(0.96); background: #f1f2f6; }
 
         .grid-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         
-        /* ANIMAÇÃO DE ALERTA */
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 10px rgba(255, 0, 60, 0.2); border-color: rgba(255, 0, 60, 0.5); }
-            50% { box-shadow: 0 0 30px rgba(255, 0, 60, 0.6); border-color: var(--red-neon); }
-            100% { box-shadow: 0 0 10px rgba(255, 0, 60, 0.2); border-color: rgba(255, 0, 60, 0.5); }
+        /* ANIMAÇÃO DE ALERTA CLARO */
+        @keyframes pulse-red-light {
+            0% { box-shadow: 0 0 10px rgba(231, 76, 60, 0.1); border-color: rgba(231, 76, 60, 0.4); }
+            50% { box-shadow: 0 0 20px rgba(231, 76, 60, 0.3); border-color: var(--red-neon); }
+            100% { box-shadow: 0 0 10px rgba(231, 76, 60, 0.1); border-color: rgba(231, 76, 60, 0.4); }
         }
 
-        .border-green { border-color: var(--green-neon) !important; box-shadow: 0 0 20px rgba(0,255,65,0.15) !important; }
-        .border-red { border-color: var(--red-neon) !important; box-shadow: 0 0 20px rgba(255,0,60,0.15) !important; }
-        .border-alert { animation: pulse-red 1.5s infinite; border-width: 2px !important; }
+        .border-green { border-color: var(--green-neon) !important; background: rgba(46, 204, 113, 0.05); }
+        .border-red { border-color: var(--red-neon) !important; background: rgba(231, 76, 60, 0.05); }
+        .border-alert { animation: pulse-red-light 1.5s infinite; border-width: 2px !important; background: rgba(231, 76, 60, 0.08); }
         
         .text-green { color: var(--green-neon) !important; }
         .text-red { color: var(--red-neon) !important; }
         .text-amber { color: var(--amber-neon) !important; }
 
-        .user-tag { font-size: 0.55rem; color: #444; text-align: center; margin-top: 20px; text-transform: uppercase; }
-        .device-info { font-size: 0.6rem; color: #ffaa00; margin-top: 10px; word-break: break-all; }
+        .user-tag { font-size: 0.55rem; color: var(--text-sub); text-align: center; margin-top: 20px; text-transform: uppercase; }
+        .device-info { font-size: 0.6rem; color: var(--amber-neon); margin-top: 10px; word-break: break-all; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -144,17 +152,17 @@
             <div class="logo-title">CONTROWS</div>
             <input type="email" id="email" placeholder="E-mail de acesso">
             <input type="password" id="password" placeholder="Senha">
-            <button style="width:100%; padding:18px; background:var(--blue-neon); border:none; border-radius:14px; font-weight:900; cursor:pointer; margin-top:10px;" onclick="handleLogin()">ENTRAR</button>
+            <button style="width:100%; padding:18px; background:var(--blue-neon); border:none; border-radius:14px; color:#fff; font-weight:900; cursor:pointer; margin-top:10px; box-shadow: 0 4px 12px rgba(0, 168, 255, 0.3);" onclick="handleLogin()">ENTRAR</button>
         </div>
 
         <!-- TELA DE BLOQUEIO DE DISPOSITIVO NOVO -->
         <div id="deviceAuthPage">
             <div class="logo-title" style="color: var(--amber-neon);">BLOQUEIO</div>
-            <p style="font-size: 0.8rem; color: #aaa;">Este dispositivo não está autorizado para este usuário.</p>
+            <p style="font-size: 0.8rem; color: var(--text-sub);">Este dispositivo não está autorizado para este usuário.</p>
             <div class="device-info" id="deviceIdDisplay">ID: ---</div>
             <input type="text" id="activationKey" placeholder="Chave de Ativação">
-            <button style="width:100%; padding:18px; background:var(--amber-neon); border:none; border-radius:14px; font-weight:900; color:#000; cursor:pointer; margin-top:10px;" onclick="verifyDeviceKey()">AUTORIZAR APARELHO</button>
-            <button style="width:100%; padding:12px; background:transparent; border:1px solid #444; color:#aaa; border-radius:14px; font-weight:bold; cursor:pointer; margin-top:10px;" onclick="logout()">VOLTAR</button>
+            <button style="width:100%; padding:18px; background:var(--amber-neon); border:none; border-radius:14px; font-weight:900; color:#fff; cursor:pointer; margin-top:10px; box-shadow: 0 4px 12px rgba(230, 126, 34, 0.3);" onclick="verifyDeviceKey()">AUTORIZAR APARELHO</button>
+            <button style="width:100%; padding:12px; background:transparent; border:1px solid #ced4da; color:var(--text-sub); border-radius:14px; font-weight:bold; cursor:pointer; margin-top:10px;" onclick="logout()">VOLTAR</button>
         </div>
 
         <!-- PAINEL DE CONTROLE -->
@@ -166,7 +174,7 @@
                 <div id="gateText" class="val">---</div>
             </div>
 
-            <!-- BOTÕES EXCLUSIVOS DO ADMIN (DIFERENCIADOS) -->
+            <!-- BOTÕES EXCLUSIVOS DO ADMIN -->
             <div id="adminContainer" class="grid-admin">
                 <div class="card admin-card clickable" onclick="sendHardwareConfig()">
                     <div class="label">Portão</div>
@@ -190,7 +198,7 @@
                 </div>
                 <div class="card sub-btn clickable" onclick="logout()">
                     <div class="label">Sair</div>
-                    <div class="val" style="font-size:0.9rem; color: #666">SESSÃO</div>
+                    <div class="val" style="font-size:0.9rem; color: var(--text-sub)">SESSÃO</div>
                 </div>
             </div>
             <div id="userTag" class="user-tag"></div>
@@ -293,7 +301,6 @@
         document.getElementById('controlPanel').style.display = 'block';
         document.getElementById('userTag').innerText = "Acesso: " + user.email;
         
-        // Exibe o contêiner com os dois botões exclusivos se for o admin
         if (user.email === ADMIN_EMAIL) {
             document.getElementById('adminContainer').style.display = 'grid';
         }
@@ -348,7 +355,6 @@
         });
     }
 
-    // FUNÇÃO EXCLUSIVA 1: CONFIGURAÇÃO DE HARDWARE (PORTÃO VIA MQTT)
     function sendHardwareConfig() {
         if (auth.currentUser.email !== ADMIN_EMAIL) return;
         if (!mqttClient) return alert("Erro: MQTT desconectado.");
@@ -366,13 +372,12 @@
         }
     }
 
-    // FUNÇÃO EXCLUSIVA 2: GERAR TOKEN PARA DISPOSITIVOS DE USUÁRIOS (FIRESTORE)
     function generateDeviceToken() {
         if (auth.currentUser.email !== ADMIN_EMAIL) return;
         
         const emailAlvo = prompt("Digite o e-mail do usuário que receberá a permissão de novo celular:");
         if (emailAlvo) {
-            const tokenAleatorio = Math.floor(100000 + Math.random() * 900000).toString(); // Código de 6 dígitos
+            const tokenAleatorio = Math.floor(100000 + Math.random() * 900000).toString();
             
             db.collection("chaves_ativacao").doc(emailAlvo).set({
                 chave: tokenAleatorio,
@@ -385,7 +390,6 @@
         }
     }
 
-    // Fluxo normal para envio dos comandos comuns (PULSO, AUTO)
     function sendCmdWithLog(comando) {
         if (!mqttClient) return;
         mqttClient.publish('esp32/esp32_01/comando', comando);
