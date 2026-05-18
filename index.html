@@ -62,13 +62,15 @@
         .app-content { flex: 1; padding: 50px 25px; display: flex; flex-direction: column; justify-content: center; }
 
         /* --- UI --- */
-        #loginPage {
+        #loginPage, #deviceAuthPage {
             background: var(--card-bg);
             border: 1px solid var(--blue-neon);
             padding: 40px 25px;
             border-radius: 28px;
             text-align: center;
         }
+
+        #deviceAuthPage { display: none; border-color: var(--amber-neon); }
 
         .logo-title { font-size: 1.8rem; font-weight: 900; letter-spacing: 5px; color: var(--blue-neon); font-style: italic; margin-bottom: 25px; }
 
@@ -126,6 +128,7 @@
         .text-amber { color: var(--amber-neon) !important; }
 
         .user-tag { font-size: 0.55rem; color: #444; text-align: center; margin-top: 20px; text-transform: uppercase; }
+        .device-info { font-size: 0.6rem; color: #ffaa00; margin-top: 10px; word-break: break-all; }
     </style>
 </head>
 <body>
@@ -141,6 +144,16 @@
             <button style="width:100%; padding:18px; background:var(--blue-neon); border:none; border-radius:14px; font-weight:900; cursor:pointer; margin-top:10px;" onclick="handleLogin()">ENTRAR</button>
         </div>
 
+        <!-- TELA DE BLOQUEIO DE DISPOSITIVO NOVO -->
+        <div id="deviceAuthPage">
+            <div class="logo-title" style="color: var(--amber-neon);">BLOQUEIO</div>
+            <p style="font-size: 0.8rem; color: #aaa;">Este dispositivo não está autorizado para este usuário.</p>
+            <div class="device-info" id="deviceIdDisplay">ID: ---</div>
+            <input type="text" id="activationKey" placeholder="Chave de Ativação">
+            <button style="width:100%; padding:18px; background:var(--amber-neon); border:none; border-radius:14px; font-weight:900; color:#000; cursor:pointer; margin-top:10px;" onclick="verifyDeviceKey()">AUTORIZAR APARELHO</button>
+            <button style="width:100%; padding:12px; background:transparent; border:1px solid #444; color:#aaa; border-radius:14px; font-weight:bold; cursor:pointer; margin-top:10px;" onclick="logout()">VOLTAR</button>
+        </div>
+
         <!-- PAINEL DE CONTROLE -->
         <div id="controlPanel">
             <div id="connStatus" class="conn-status">BOX INVERTER OFFLINE</div>
@@ -152,7 +165,7 @@
 
             <div id="adminBtn" class="card clickable" onclick="sendCmdWithLog('CONFIG')">
                 <div class="label">Ferramentas Admin</div>
-                <div class="val">AUTO CONFIG</div>
+                <div id="adminVal" class="val">AUTO CONFIG</div>
             </div>
 
             <div class="card main-btn clickable" onclick="sendCmdWithLog('PULSO')">
@@ -193,24 +206,112 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    // 1. GERA OU CAPTURA UMA IDENTIDADE EXCLUSIVA PARA ESTE NAVEGADOR/APARELHO
+    function getDeviceUUID() {
+        let uuid = localStorage.getItem('controws_device_uuid');
+        if (!uuid) {
+            uuid = 'DEV-' + Math.random().toString(36).substring(2, 10).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+            localStorage.setItem('controws_device_uuid', uuid);
+        }
+        return uuid;
+    }
+
     function handleLogin() {
         const e = document.getElementById('email').value;
         const p = document.getElementById('password').value;
         auth.signInWithEmailAndPassword(e, p).catch(err => alert("Acesso Negado: " + err.message));
     }
 
+    // 2. VERIFICAÇÃO DE VÍNCULO NO FIRESTORE
+    function checkDeviceAuthorization(user) {
+        if (user.email === ADMIN_EMAIL) {
+            // Admin ignora validação local ou valida a si mesmo
+            showDashboard(user);
+            return;
+        }
+
+        const deviceUUID = getDeviceUUID();
+        
+        // Busca na coleção 'usuarios_dispositivos' o documento correspondente ao e-mail logado
+        db.collection("usuarios_dispositivos").doc(user.email).get().then(doc => {
+            if (doc.exists) {
+                const data = doc.data();
+                // Se o UUID armazenado no banco for igual ao deste celular, libera o acesso
+                if (data.deviceUUID === deviceUUID) {
+                    showDashboard(user);
+                } else {
+                    // Senha correta, mas o aparelho é diferente! Bloqueia.
+                    showDeviceAuthPage(user.email, deviceUUID);
+                }
+            } else {
+                // Primeiro acesso do usuário: O admin precisa criar o registro ou fornecer a chave inicial.
+                showDeviceAuthPage(user.email, deviceUUID);
+            }
+        }).catch(err => {
+            alert("Erro na validação de hardware: " + err.message);
+            logout();
+        });
+    }
+
+    function showDeviceAuthPage(email, uuid) {
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('controlPanel').style.display = 'none';
+        document.getElementById('deviceAuthPage').style.display = 'block';
+        document.getElementById('deviceIdDisplay').innerText = "ID DISPOSITIVO: " + uuid;
+    }
+
+    // 3. ATIVAÇÃO DE NOVOS APARELHOS
+    function verifyDeviceKey() {
+        const user = auth.currentUser;
+        const keyInserted = document.getElementById('activationKey').value.trim();
+        const deviceUUID = getDeviceUUID();
+
+        if(!keyInserted) return alert("Insira a chave!");
+
+        // Validação via Firestore buscando se a chave digitada bate com a gerada para o usuário
+        db.collection("chaves_ativacao").doc(user.email).get().then(doc => {
+            if (doc.exists && doc.data().chave === keyInserted) {
+                // Chave válida! Registra este celular definitivamente para este usuário
+                db.collection("usuarios_dispositivos").doc(user.email).set({
+                    deviceUUID: deviceUUID,
+                    autorizadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+                    modeloInfo: navigator.userAgent.substring(0, 50)
+                }).then(() => {
+                    alert("Aparelho autorizado com sucesso!");
+                    // Apaga a chave usada para não reutilizarem
+                    db.collection("chaves_ativacao").doc(user.email).delete();
+                    showDashboard(user);
+                });
+            } else {
+                alert("Chave de ativação inválida ou expirada.");
+            }
+        });
+    }
+
     function showDashboard(user) {
         document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('deviceAuthPage').style.display = 'none';
         document.getElementById('controlPanel').style.display = 'block';
         document.getElementById('userTag').innerText = "Acesso: " + user.email;
-        if (user.email === ADMIN_EMAIL) document.getElementById('adminBtn').style.display = 'block';
+        if (user.email === ADMIN_EMAIL) {
+            document.getElementById('adminBtn').style.display = 'block';
+            document.getElementById('adminVal').innerText = "GERAR CHAVE";
+        }
         initMQTT();
     }
 
-    function logout() { auth.signOut().then(() => location.reload()); }
+    function logout() { 
+        auth.signOut().then(() => {
+            localStorage.removeItem('firebase:AuthEventPersistence'); // Força limpeza de cache se necessário
+            location.reload();
+        }); 
+    }
 
     let mqttClient;
     function initMQTT() {
+        // Evita conexões duplicadas se re-chamado
+        if (mqttClient && mqttClient.connected) return;
+
         mqttClient = mqtt.connect('wss://e6609cbe84ae4e2b8eda83c3164e7900.s1.eu.hivemq.cloud:8884/mqtt', {
             username: 'esp32', password: '517983lgA', clientId: 'CONTROWS_' + Math.random().toString(16).substr(2, 5)
         });
@@ -250,16 +351,38 @@
     }
 
     function sendCmdWithLog(comando) {
+        // Nova função interna para o Administrador gerar tokens de novos celulares
+        if (comando === 'CONFIG' && auth.currentUser.email === ADMIN_EMAIL) {
+            const emailAlvo = prompt("Digite o e-mail do usuário que quer autorizar novo celular:");
+            if(emailAlvo) {
+                const tokenAleatorio = Math.floor(100000 + Math.random() * 900000).toString(); // Gera 6 dígitos
+                db.collection("chaves_ativacao").doc(emailAlvo).set({
+                    chave: tokenAleatorio,
+                    geradoEm: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(() => {
+                    alert(`Chave para ${emailAlvo}: ${tokenAleatorio}\nEnvie este código ao usuário.`);
+                });
+            }
+            return;
+        }
+
         if (!mqttClient) return;
         mqttClient.publish('esp32/esp32_01/comando', comando);
         db.collection("logs").add({
             usuario: auth.currentUser.email,
             acao: comando,
+            device: getDeviceUUID(),
             data: firebase.firestore.FieldValue.serverTimestamp()
         });
     }
 
-    auth.onAuthStateChanged(user => { if (user) showDashboard(user); });
+    // INTERCEPTOR PRINCIPAL DO FIREBASE
+    auth.onAuthStateChanged(user => { 
+        if (user) {
+            // Altera o comportamento original: em vez de ir direto ao painel, valida o dispositivo físico primeiro
+            checkDeviceAuthorization(user); 
+        } 
+    });
 </script>
 </body>
 </html>
