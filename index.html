@@ -15,8 +15,8 @@
             --bg: #f5f6fa; 
             --card-bg: #ffffff; 
             --text-main: #1e2229; 
-            --text-sub: #57606f; /* Escurecido para melhor leitura */
-            --blue-neon: #0097e6; /* Azul mais vivo e visível */
+            --text-sub: #57606f; 
+            --blue-neon: #0097e6; 
             --admin-gold: #d4af37; 
             --green-neon: #2ecc71;
             --red-neon: #e74c3c;
@@ -100,7 +100,7 @@
         /* PADRÃO DE CARDS COM CONTORNOS BEM VISÍVEIS */
         .card {
             background: var(--card-bg);
-            border: 2px solid #bdf0ff; /* Contorno padrão bem mais aparente */
+            border: 2px solid #bdf0ff; 
             border-radius: 22px;
             padding: 20px;
             margin-bottom: 12px;
@@ -112,11 +112,11 @@
         .label { font-size: 0.65rem; color: var(--text-sub); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
         .val { font-size: 1.6rem; font-weight: 900; text-transform: uppercase; color: var(--text-main); }
 
-        /* DESTAQUE DUPLO NO BOTÃO PRINCIPAL */
+        /* DESTAQUE NO BOTÃO PRINCIPAL */
         .main-btn { 
             cursor: pointer; 
             padding: 35px 20px; 
-            border: 3px solid var(--blue-neon) !important; /* Borda grossa e chamativa */
+            border: 3px solid var(--blue-neon) !important; 
             box-shadow: 0 6px 16px rgba(0, 151, 230, 0.15);
         }
 
@@ -128,9 +128,15 @@
 
         .clickable:active { transform: scale(0.96); background: #f1f2f6; }
 
+        /* GRADE DE RODAPÉ COM CONTORNOS EM AZUL NEON REFORÇADOS */
         .grid-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .sub-btn {
+            cursor: pointer;
+            border: 3px solid var(--blue-neon) !important; /* Borda grossa azul neon viva */
+            box-shadow: 0 4px 12px rgba(0, 151, 230, 0.12);
+        }
         
-        /* BORDAS DINÂMICAS DE STATUS (ESPESSURA REFORÇADA PARA 3PX) */
+        /* BORDAS DINÂMICAS DE STATUS */
         .border-green { border: 3px solid var(--green-neon) !important; background: rgba(46, 204, 113, 0.03); box-shadow: 0 4px 12px rgba(46, 204, 113, 0.15); }
         .border-red { border: 3px solid var(--red-neon) !important; background: rgba(231, 76, 60, 0.03); box-shadow: 0 4px 12px rgba(231, 76, 60, 0.15); }
         
@@ -194,21 +200,21 @@
                 </div>
             </div>
 
-            <!-- CONTORNO DO BOTÃO ACIONAR REFORÇADO -->
+            <!-- CONTORNO DO BOTÃO ACIONAR -->
             <div class="card main-btn clickable" onclick="sendCmdWithLog('PULSO')">
                 <div class="label">Portão Principal</div>
                 <div class="val" style="color: var(--blue-neon)">ACIONAR</div>
             </div>
 
-            <!-- CONTORNO DOS BOTÕES DE RODAPÉ (PEDESTRE E SAIR) -->
+            <!-- BOTÕES DE RODAPÉ COM BORDAS REFORÇADAS -->
             <div class="grid-footer">
                 <div class="card sub-btn clickable" onclick="sendCmdWithLog('AUTO')">
                     <div class="label">Acesso</div>
-                    <div class="val" style="font-size:0.9rem;">PEDESTRE</div>
+                    <div class="val" style="font-size:0.9rem; color: var(--blue-neon);">PEDESTRE</div>
                 </div>
                 <div class="card sub-btn clickable" onclick="logout()">
                     <div class="label">Sair</div>
-                    <div class="val" style="font-size:0.9rem; color: var(--text-sub)">SESSÃO</div>
+                    <div class="val" style="font-size:0.9rem; color: #7f8c8d;">SESSÃO</div>
                 </div>
             </div>
             <div id="userTag" class="user-tag"></div>
