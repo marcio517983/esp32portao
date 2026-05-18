@@ -1,264 +1,426 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
 
 <meta charset="UTF-8">
+
 <meta name="viewport"
-content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+content="width=device-width,
+initial-scale=1.0,
+maximum-scale=1.0,
+user-scalable=no">
 
 <title>CONTROWS - SEGURANÇA TOTAL</title>
 
+<!-- FIREBASE -->
+
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+
+<!-- MQTT -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
 
 <!-- FINGERPRINT -->
+
 <script src="https://openfpcdn.io/fingerprintjs/v3"></script>
 
 <style>
 
 :root{
-    --bg:#050507;
-    --card-bg:rgba(25,25,30,0.7);
-    --blue-neon:#00d2ff;
-    --admin-gold:#ffcc00;
-    --green-neon:#00ff41;
-    --red-neon:#ff003c;
-    --amber-neon:#ffaa00;
-    --phone-border:#1a1a1d;
+
+--bg:#050507;
+--card-bg:rgba(25,25,30,0.7);
+
+--blue-neon:#00d2ff;
+--admin-gold:#ffcc00;
+
+--green-neon:#00ff41;
+--red-neon:#ff003c;
+--amber-neon:#ffaa00;
+
+--phone-border:#1a1a1d;
+
 }
 
 body{
-    font-family:Arial,sans-serif;
-    background:#000;
-    color:#fff;
-    margin:0;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    min-height:100vh;
-    overflow:hidden;
+
+font-family:Arial,sans-serif;
+
+background:#000;
+
+color:#fff;
+
+margin:0;
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+min-height:100vh;
+
+overflow:hidden;
+
 }
 
 .phone-frame{
-    width:380px;
-    height:820px;
-    background:radial-gradient(circle at center,#101015 0%,#050507 100%);
-    border:14px solid var(--phone-border);
-    border-radius:60px;
-    position:relative;
-    display:flex;
-    flex-direction:column;
-    overflow:hidden;
-    box-shadow:0 0 50px rgba(0,0,0,0.9);
+
+width:380px;
+
+height:820px;
+
+background:radial-gradient(circle at center,
+#101015 0%,
+#050507 100%);
+
+border:14px solid var(--phone-border);
+
+border-radius:60px;
+
+position:relative;
+
+display:flex;
+
+flex-direction:column;
+
+overflow:hidden;
+
+box-shadow:0 0 50px rgba(0,0,0,0.9);
+
 }
 
 .phone-frame::before{
-    content:"";
-    position:absolute;
-    top:0;
-    left:50%;
-    transform:translateX(-50%);
-    width:160px;
-    height:30px;
-    background:var(--phone-border);
-    border-bottom-left-radius:20px;
-    border-bottom-right-radius:20px;
-    z-index:100;
+
+content:"";
+
+position:absolute;
+
+top:0;
+left:50%;
+
+transform:translateX(-50%);
+
+width:160px;
+height:30px;
+
+background:var(--phone-border);
+
+border-bottom-left-radius:20px;
+border-bottom-right-radius:20px;
+
+z-index:100;
+
 }
 
 @media (max-width:500px){
 
 .phone-frame{
-    width:100vw;
-    height:100vh;
-    border:none;
-    border-radius:0;
+
+width:100vw;
+height:100vh;
+
+border:none;
+border-radius:0;
+
 }
 
 .phone-frame::before{
-    display:none;
+
+display:none;
+
 }
 
 }
 
 .app-content{
-    flex:1;
-    padding:50px 25px;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
+
+flex:1;
+
+padding:50px 25px;
+
+display:flex;
+
+flex-direction:column;
+
+justify-content:center;
+
 }
 
 #loginPage,
 #blockedPage{
 
-    background:var(--card-bg);
-    border:1px solid var(--blue-neon);
-    padding:40px 25px;
-    border-radius:28px;
-    text-align:center;
+background:var(--card-bg);
+
+border:1px solid var(--blue-neon);
+
+padding:40px 25px;
+
+border-radius:28px;
+
+text-align:center;
+
 }
 
 #blockedPage{
-    border-color:var(--red-neon);
-    display:none;
+
+border-color:var(--red-neon);
+
+display:none;
+
 }
 
 .logo-title{
-    font-size:1.8rem;
-    font-weight:900;
-    letter-spacing:5px;
-    color:var(--blue-neon);
-    font-style:italic;
-    margin-bottom:25px;
+
+font-size:1.8rem;
+
+font-weight:900;
+
+letter-spacing:5px;
+
+color:var(--blue-neon);
+
+font-style:italic;
+
+margin-bottom:25px;
+
 }
 
 input{
 
-    width:100%;
-    padding:16px;
-    margin:10px 0;
-    background:rgba(255,255,255,0.03);
-    border:1px solid rgba(255,255,255,0.1);
-    color:white;
-    border-radius:14px;
-    box-sizing:border-box;
+width:100%;
+
+padding:16px;
+
+margin:10px 0;
+
+background:rgba(255,255,255,0.03);
+
+border:1px solid rgba(255,255,255,0.1);
+
+color:white;
+
+border-radius:14px;
+
+box-sizing:border-box;
+
+}
+
+button{
+
+width:100%;
+
+padding:18px;
+
+background:var(--blue-neon);
+
+border:none;
+
+border-radius:14px;
+
+font-weight:900;
+
+cursor:pointer;
+
+margin-top:10px;
+
 }
 
 #controlPanel{
-    display:none;
-    width:100%;
+
+display:none;
+
+width:100%;
+
 }
 
 .conn-status{
 
-    font-size:0.65rem;
-    text-align:center;
-    margin-bottom:15px;
-    letter-spacing:2px;
-    color:#444;
-    font-weight:bold;
-    text-transform:uppercase;
+font-size:0.65rem;
+
+text-align:center;
+
+margin-bottom:15px;
+
+letter-spacing:2px;
+
+color:#444;
+
+font-weight:bold;
+
+text-transform:uppercase;
+
 }
 
 .online{
-    color:var(--blue-neon)!important;
-    text-shadow:0 0 8px var(--blue-neon);
+
+color:var(--blue-neon)!important;
+
+text-shadow:0 0 8px var(--blue-neon);
+
 }
 
 .card{
 
-    background:var(--card-bg);
-    backdrop-filter:blur(12px);
-    border:1px solid rgba(0,210,255,0.25);
-    border-radius:22px;
-    padding:20px;
-    margin-bottom:12px;
-    transition:all 0.3s ease;
-    text-align:center;
+background:var(--card-bg);
+
+backdrop-filter:blur(12px);
+
+border:1px solid rgba(0,210,255,0.25);
+
+border-radius:22px;
+
+padding:20px;
+
+margin-bottom:12px;
+
+transition:all 0.3s ease;
+
+text-align:center;
+
 }
 
 .label{
-    font-size:0.65rem;
-    color:#666;
-    text-transform:uppercase;
-    letter-spacing:2px;
-    margin-bottom:5px;
+
+font-size:0.65rem;
+
+color:#666;
+
+text-transform:uppercase;
+
+letter-spacing:2px;
+
+margin-bottom:5px;
+
 }
 
 .val{
-    font-size:1.6rem;
-    font-weight:900;
-    text-transform:uppercase;
+
+font-size:1.6rem;
+
+font-weight:900;
+
+text-transform:uppercase;
+
 }
 
 .main-btn{
-    cursor:pointer;
-    padding:35px 20px;
+
+cursor:pointer;
+
+padding:35px 20px;
+
 }
 
 #adminBtn{
-    display:none;
-    border-color:var(--admin-gold);
+
+display:none;
+
+border-color:var(--admin-gold);
+
 }
 
 #adminBtn .val{
-    color:var(--admin-gold);
-    font-size:1.1rem;
+
+color:var(--admin-gold);
+
+font-size:1.1rem;
+
 }
 
 .clickable:active{
-    transform:scale(0.96);
-    background:rgba(255,255,255,0.1);
+
+transform:scale(0.96);
+
+background:rgba(255,255,255,0.1);
+
 }
 
 .grid-footer{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
+
+display:grid;
+
+grid-template-columns:1fr 1fr;
+
+gap:12px;
+
 }
 
 @keyframes pulse-red{
 
 0%{
-    box-shadow:0 0 10px rgba(255,0,60,0.2);
+
+box-shadow:0 0 10px rgba(255,0,60,0.2);
+
 }
 
 50%{
-    box-shadow:0 0 30px rgba(255,0,60,0.6);
+
+box-shadow:0 0 30px rgba(255,0,60,0.6);
+
 }
 
 100%{
-    box-shadow:0 0 10px rgba(255,0,60,0.2);
+
+box-shadow:0 0 10px rgba(255,0,60,0.2);
+
 }
 
 }
 
 .border-green{
-    border-color:var(--green-neon)!important;
+
+border-color:var(--green-neon)!important;
+
 }
 
 .border-red{
-    border-color:var(--red-neon)!important;
+
+border-color:var(--red-neon)!important;
+
 }
 
 .border-alert{
-    animation:pulse-red 1.5s infinite;
+
+animation:pulse-red 1.5s infinite;
+
 }
 
 .text-green{
-    color:var(--green-neon)!important;
+
+color:var(--green-neon)!important;
+
 }
 
 .text-red{
-    color:var(--red-neon)!important;
+
+color:var(--red-neon)!important;
+
 }
 
 .text-amber{
-    color:var(--amber-neon)!important;
+
+color:var(--amber-neon)!important;
+
 }
 
 .user-tag{
-    font-size:0.55rem;
-    color:#444;
-    text-align:center;
-    margin-top:20px;
-    text-transform:uppercase;
-}
 
-button{
+font-size:0.55rem;
 
-    width:100%;
-    padding:18px;
-    background:var(--blue-neon);
-    border:none;
-    border-radius:14px;
-    font-weight:900;
-    cursor:pointer;
-    margin-top:10px;
+color:#444;
+
+text-align:center;
+
+margin-top:20px;
+
+text-transform:uppercase;
+
 }
 
 </style>
@@ -271,14 +433,21 @@ button{
 <div class="app-content">
 
 <!-- LOGIN -->
+
 <div id="loginPage">
 
-<div class="logo-title">CONTROWS</div>
+<div class="logo-title">
+CONTROWS
+</div>
 
-<input type="email" id="email"
+<input
+type="email"
+id="email"
 placeholder="E-mail de acesso">
 
-<input type="password" id="password"
+<input
+type="password"
+id="password"
 placeholder="Senha">
 
 <button onclick="handleLogin()">
@@ -292,7 +461,7 @@ ENTRAR
 <div id="blockedPage">
 
 <div class="logo-title"
-style="color: var(--red-neon)">
+style="color:var(--red-neon)">
 BLOQUEADO
 </div>
 
@@ -303,7 +472,8 @@ a outro dispositivo.
 
 </p>
 
-<button style="background:var(--red-neon)"
+<button
+style="background:var(--red-neon)"
 onclick="location.reload()">
 
 RECARREGAR
@@ -323,15 +493,20 @@ BOX INVERTER OFFLINE
 
 </div>
 
-<div id="mainCard" class="card">
+<div id="mainCard"
+class="card">
 
 <div class="label">
+
 Monitoramento de Status
+
 </div>
 
 <div id="gateText"
 class="val">
+
 ---
+
 </div>
 
 </div>
@@ -358,7 +533,7 @@ Portão Principal
 </div>
 
 <div class="val"
-style="color: var(--blue-neon)">
+style="color:var(--blue-neon)">
 ACIONAR
 </div>
 
@@ -409,42 +584,58 @@ class="user-tag"></div>
 const ADMIN_EMAIL =
 "controwssistemas@gmail.com";
 
-const PASS_SUFFIX = "C@wS*";
+
+// FIREBASE CONFIG
 
 const firebaseConfig = {
 
-apiKey: "AIzaSyBu4LrzBcnxtdCuFI2LWMRYQstRttEE5xM",
+apiKey:
+"AIzaSyBu4LrzBcnxtdCuFI2LWMRYQstRttEE5xM",
 
-authDomain: "controws.firebaseapp.com",
+authDomain:
+"controws.firebaseapp.com",
 
-projectId: "controws",
+projectId:
+"controws",
 
-storageBucket: "controws.firebasestorage.app",
+storageBucket:
+"controws.firebasestorage.app",
 
-messagingSenderId: "554392538069",
+messagingSenderId:
+"554392538069",
 
-appId: "1:554392538069:web:fb13b841b9fb06f326cb5c",
+appId:
+"1:554392538069:web:fb13b841b9fb06f326cb5c",
 
-measurementId: "G-H1GEH28EVB"
+measurementId:
+"G-H1GEH28EVB"
 
 };
 
+
+// INICIAR FIREBASE
+
 firebase.initializeApp(firebaseConfig);
+
+console.log("Firebase iniciado");
 
 const auth = firebase.auth();
 
 const db = firebase.firestore();
 
 
-// GERAR FINGERPRINT
+// GERAR ID DO APARELHO
 
 async function getDeviceId(){
 
-    const fp = await FingerprintJS.load();
+const fp =
+await FingerprintJS.load();
 
-    const result = await fp.get();
+const result =
+await fp.get();
 
-    return result.visitorId;
+return result.visitorId;
+
 }
 
 
@@ -452,31 +643,40 @@ async function getDeviceId(){
 
 async function handleLogin(){
 
-    const e =
-    document.getElementById('email').value;
+const email =
+document.getElementById(
+'email'
+).value;
 
-    const p =
-    document.getElementById('password').value;
+const password =
+document.getElementById(
+'password'
+).value;
 
-    const secretPassword =
-    p + PASS_SUFFIX;
+try{
 
-    try{
+const userCredential =
+await auth
+.signInWithEmailAndPassword(
+email,
+password
+);
 
-        const userCredential =
-        await auth.signInWithEmailAndPassword(
-            e,
-            secretPassword
-        );
+checkDeviceLink(
+userCredential.user
+);
 
-        checkDeviceLink(userCredential.user);
+}catch(err){
 
-    }catch(err){
+console.log(err);
 
-        alert(
-            "Acesso Negado: " + err.message
-        );
-    }
+alert(
+"Erro Login Firebase:\n\n"
++ err.message
+);
+
+}
+
 }
 
 
@@ -484,118 +684,131 @@ async function handleLogin(){
 
 async function checkDeviceLink(user){
 
-    const currentDeviceId =
-    await getDeviceId();
+const currentDeviceId =
+await getDeviceId();
 
-    const userRef =
-    db.collection(
-        "dispositivos_autorizados"
-    ).doc(user.email);
+const userRef =
+db.collection(
+"dispositivos_autorizados"
+).doc(user.email);
 
-    const doc =
-    await userRef.get();
+const doc =
+await userRef.get();
 
-    const sessionToken =
-    Math.random()
-    .toString(36)
-    .substring(2);
-
-
-    // PRIMEIRO LOGIN
-
-    if(!doc.exists){
-
-        await userRef.set({
-
-            deviceId: currentDeviceId,
-
-            sessionToken: sessionToken,
-
-            online: true,
-
-            lastLogin:
-            firebase.firestore
-            .FieldValue.serverTimestamp(),
-
-            userAgent:
-            navigator.userAgent
-        });
-
-        localStorage.setItem(
-            "sessionToken",
-            sessionToken
-        );
-
-        showDashboard(user);
-
-        monitorSession(user.email);
-
-        return;
-    }
+const sessionToken =
+Math.random()
+.toString(36)
+.substring(2);
 
 
-    const data = doc.data();
+// PRIMEIRO LOGIN
+
+if(!doc.exists){
+
+await userRef.set({
+
+deviceId:
+currentDeviceId,
+
+sessionToken:
+sessionToken,
+
+online:true,
+
+lastLogin:
+firebase.firestore
+.FieldValue
+.serverTimestamp(),
+
+userAgent:
+navigator.userAgent
+
+});
+
+localStorage.setItem(
+"sessionToken",
+sessionToken
+);
+
+showDashboard(user);
+
+monitorSession(user.email);
+
+return;
+
+}
 
 
-    // DISPOSITIVO DIFERENTE
-
-    if(data.deviceId !== currentDeviceId){
-
-        await auth.signOut();
-
-        document.getElementById(
-            'loginPage'
-        ).style.display = 'none';
-
-        document.getElementById(
-            'blockedPage'
-        ).style.display = 'block';
-
-        return;
-    }
+const data = doc.data();
 
 
-    // LOGIN DUPLO
+// APARELHO DIFERENTE
 
-    if(
-        data.online === true &&
-        localStorage.getItem(
-            "sessionToken"
-        ) !== data.sessionToken
-    ){
+if(data.deviceId !== currentDeviceId){
 
-        await auth.signOut();
+await auth.signOut();
 
-        alert(
-            "Conta já está em uso."
-        );
+document.getElementById(
+'loginPage'
+).style.display='none';
 
-        return;
-    }
+document.getElementById(
+'blockedPage'
+).style.display='block';
+
+return;
+
+}
 
 
-    // ATUALIZA SESSÃO
+// LOGIN DUPLO
 
-    await userRef.update({
+if(
 
-        online:true,
+data.online === true &&
 
-        sessionToken:sessionToken,
+localStorage.getItem(
+"sessionToken"
+) !== data.sessionToken
 
-        lastLogin:
-        firebase.firestore
-        .FieldValue.serverTimestamp()
+){
 
-    });
+await auth.signOut();
 
-    localStorage.setItem(
-        "sessionToken",
-        sessionToken
-    );
+alert(
+"Conta já está em uso."
+);
 
-    showDashboard(user);
+return;
 
-    monitorSession(user.email);
+}
+
+
+// ATUALIZA SESSÃO
+
+await userRef.update({
+
+online:true,
+
+sessionToken:
+sessionToken,
+
+lastLogin:
+firebase.firestore
+.FieldValue
+.serverTimestamp()
+
+});
+
+localStorage.setItem(
+"sessionToken",
+sessionToken
+);
+
+showDashboard(user);
+
+monitorSession(user.email);
+
 }
 
 
@@ -603,68 +816,75 @@ async function checkDeviceLink(user){
 
 function monitorSession(email){
 
-    db.collection(
-        "dispositivos_autorizados"
-    )
-    .doc(email)
-    .onSnapshot((doc)=>{
+db.collection(
+"dispositivos_autorizados"
+)
+.doc(email)
+.onSnapshot((doc)=>{
 
-        if(!doc.exists) return;
+if(!doc.exists) return;
 
-        const data = doc.data();
+const data =
+doc.data();
 
-        const localToken =
-        localStorage.getItem(
-            "sessionToken"
-        );
+const localToken =
+localStorage.getItem(
+"sessionToken"
+);
 
-        if(
-            data.sessionToken !== localToken
-        ){
+if(
+data.sessionToken !== localToken
+){
 
-            alert(
-                "Sua sessão foi encerrada."
-            );
+alert(
+"Sua sessão foi encerrada."
+);
 
-            auth.signOut();
+auth.signOut();
 
-            location.reload();
-        }
+location.reload();
 
-    });
+}
+
+});
 
 }
 
 
-// MOSTRAR DASHBOARD
+// DASHBOARD
 
 function showDashboard(user){
 
-    document.getElementById(
-        'loginPage'
-    ).style.display = 'none';
+document.getElementById(
+'loginPage'
+).style.display='none';
 
-    document.getElementById(
-        'blockedPage'
-    ).style.display = 'none';
+document.getElementById(
+'blockedPage'
+).style.display='none';
 
-    document.getElementById(
-        'controlPanel'
-    ).style.display = 'block';
+document.getElementById(
+'controlPanel'
+).style.display='block';
 
-    document.getElementById(
-        'userTag'
-    ).innerText =
-    "Acesso: " + user.email;
+document.getElementById(
+'userTag'
+).innerText =
+"Acesso: "
++ user.email;
 
-    if(user.email === ADMIN_EMAIL){
+if(
+user.email === ADMIN_EMAIL
+){
 
-        document.getElementById(
-            'adminBtn'
-        ).style.display = 'block';
-    }
+document.getElementById(
+'adminBtn'
+).style.display='block';
 
-    initMQTT();
+}
+
+initMQTT();
+
 }
 
 
@@ -672,23 +892,26 @@ function showDashboard(user){
 
 async function logout(){
 
-    const user =
-    auth.currentUser;
+const user =
+auth.currentUser;
 
-    if(user){
+if(user){
 
-        await db.collection(
-            "dispositivos_autorizados"
-        )
-        .doc(user.email)
-        .update({
+await db.collection(
+"dispositivos_autorizados"
+)
+.doc(user.email)
+.update({
 
-            online:false
-        });
-    }
+online:false
 
-    auth.signOut()
-    .then(()=>location.reload());
+});
+
+}
+
+auth.signOut()
+.then(()=>location.reload());
+
 }
 
 
@@ -698,7 +921,7 @@ let mqttClient;
 
 function initMQTT(){
 
-    mqttClient = mqtt.connect(
+mqttClient = mqtt.connect(
 
 'wss://e6609cbe84ae4e2b8eda83c3164e7900.s1.eu.hivemq.cloud:8884/mqtt',
 
@@ -721,134 +944,162 @@ Math.random()
 
 mqttClient.on('connect',()=>{
 
-    const st =
-    document.getElementById(
-        'connStatus'
-    );
+const st =
+document.getElementById(
+'connStatus'
+);
 
-    st.innerText =
-    "BOX INVERTER SISTEMA ONLINE";
+st.innerText =
+"BOX INVERTER SISTEMA ONLINE";
 
-    st.classList.add('online');
+st.classList.add(
+'online'
+);
 
-    mqttClient.subscribe(
-        'esp32/esp32_01/sensores'
-    );
+mqttClient.subscribe(
+'esp32/esp32_01/sensores'
+);
 
 });
 
 
 // RECEBER MQTT
 
-mqttClient.on('message',(t,msg)=>{
+mqttClient.on('message',
+(t,msg)=>{
 
 try{
 
 const data =
-JSON.parse(msg.toString());
+JSON.parse(
+msg.toString()
+);
 
 const display =
 document.getElementById(
-    'gateText'
+'gateText'
 );
 
 const card =
 document.getElementById(
-    'mainCard'
+'mainCard'
 );
 
-if(data.sensor2.includes("ALERTA")){
+if(
+data.sensor2.includes(
+"ALERTA"
+)
+){
 
-    display.innerText =
-    "ALERTA PORTÃO ABERTO";
+display.innerText =
+"ALERTA PORTÃO ABERTO";
 
-    display.className =
-    "val text-red";
+display.className =
+"val text-red";
 
-    card.className =
-    "card border-alert";
-
-}
-else if(data.sensor2 === "ABERTO"){
-
-    display.innerText =
-    "ABERTO";
-
-    display.className =
-    "val text-green";
-
-    card.className =
-    "card border-green";
+card.className =
+"card border-alert";
 
 }
-else if(data.sensor2 === "FECHADO"){
+else if(
+data.sensor2 === "ABERTO"
+){
 
-    display.innerText =
-    "FECHADO";
+display.innerText =
+"ABERTO";
 
-    display.className =
-    "val text-red";
+display.className =
+"val text-green";
 
-    card.className =
-    "card border-red";
+card.className =
+"card border-green";
+
+}
+else if(
+data.sensor2 === "FECHADO"
+){
+
+display.innerText =
+"FECHADO";
+
+display.className =
+"val text-red";
+
+card.className =
+"card border-red";
 
 }
 else{
 
-    display.innerText =
-    data.sensor2;
+display.innerText =
+data.sensor2;
 
-    display.className =
-    "val text-amber";
+display.className =
+"val text-amber";
 
-    card.className =
-    "card";
+card.className =
+"card";
+
 }
 
-}catch(e){}
+}catch(e){
+
+console.log(e);
+
+}
 
 });
 
 }
 
 
-// ENVIAR COMANDOS
+// ENVIAR COMANDO
 
 function sendCmdWithLog(comando){
 
-    if(!mqttClient) return;
+if(!mqttClient) return;
 
-    mqttClient.publish(
-        'esp32/esp32_01/comando',
-        comando
-    );
+mqttClient.publish(
 
-    db.collection("logs").add({
+'esp32/esp32_01/comando',
 
-        usuario:
-        auth.currentUser.email,
+comando
 
-        acao:comando,
+);
 
-        data:
-        firebase.firestore
-        .FieldValue.serverTimestamp()
-    });
+db.collection("logs")
+.add({
+
+usuario:
+auth.currentUser.email,
+
+acao:
+comando,
+
+data:
+firebase.firestore
+.FieldValue
+.serverTimestamp()
+
+});
 
 }
 
 
 // LOGIN AUTOMÁTICO
 
-auth.onAuthStateChanged(user=>{
+auth.onAuthStateChanged(
+(user)=>{
 
-    if(user){
+if(user){
 
-        checkDeviceLink(user);
-    }
+checkDeviceLink(user);
+
+}
 
 });
 
 </script>
+
 </body>
 </html>
