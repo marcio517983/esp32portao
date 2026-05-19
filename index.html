@@ -41,10 +41,9 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow: hidden;
         }
 
-        /* --- MOLDURA DO CELULAR (Desktop) --- */
+        /* --- MOLDURA DO CELULAR (Padrão para Computador) --- */
         .phone-frame {
             width: 380px;
             height: 820px;
@@ -56,32 +55,31 @@
             flex-direction: column;
             overflow: hidden;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            flex-shrink: 0;
         }
 
-        /* Detalhe da Câmera/Notch */
+        /* Detalhe da Câmera/Notch (Apenas no Computador) */
         .phone-frame::before {
             content: ""; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
             width: 150px; height: 28px; background: var(--phone-border);
             border-bottom-left-radius: 18px; border-bottom-right-radius: 18px; z-index: 100;
         }
 
-        /* --- RESPONSIVIDADE TOTAL PARA CELULARES REAIS --- */
-        @media (max-width: 500px), (max-height: 850px) {
+        /* --- RESPONSIVIDADE EXCLUSIVA PARA CELULARES REAIS --- */
+        @media (max-width: 500px) {
             body {
                 align-items: flex-start;
-                overflow-y: auto;
             }
             .phone-frame { 
                 width: 100vw; 
                 height: 100vh; 
-                min-height: 100vh;
                 border: none; 
                 border-radius: 0; 
                 box-shadow: none;
             }
             .phone-frame::before { display: none; }
             .app-content {
-                padding: 30px 20px;
+                padding: 35px 20px;
             }
         }
 
@@ -98,9 +96,9 @@
             height: 100%;
         }
 
-        /* --- ESTADOS DE EXIBIÇÃO SEGUROS (Evita mistura de telas) --- */
+        /* --- ESTADOS DE EXIBIÇÃO SEGUROS --- */
         #loginPage, #deviceAuthPage, #controlPanel {
-            display: none; /* Controlado via JS de forma estrita */
+            display: none; 
             width: 100%;
         }
 
@@ -398,7 +396,7 @@
     function showDashboard(user) {
         document.getElementById('loginPage').style.display = 'none';
         document.getElementById('deviceAuthPage').style.display = 'none';
-        document.getElementById('controlPanel').style.display = 'block'; // Alterado para block estável
+        document.getElementById('controlPanel').style.display = 'block'; 
         document.getElementById('userTag').innerText = "Acesso: " + user.email;
         
         if (user.email === ADMIN_EMAIL) {
