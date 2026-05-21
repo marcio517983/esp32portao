@@ -3,9 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CONTROWS - IoT CONTROL</title>
+    <title>CONTROWS - SEGURANÇA TOTAL</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <!-- Configurações para PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0097e6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icon-192.png">
     
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
@@ -14,219 +19,147 @@
 
     <style>
         :root {
-            --bg-main: #0b0f19; 
-            --card-bg: #111827; 
-            --cyan-neon: #00f0ff; 
-            --cyan-glow: rgba(0, 240, 255, 0.4);
-            --text-main: #ffffff;
-            --text-sub: #9ca3af;
-            --green-neon: #00ff87;
-            --red-neon: #ff3b30;
-            --amber-neon: #ff9f0a;
-            --admin-gold: #ffd700;
-            --phone-border: #1f2937;
-        }
-
-        * {
-            box-sizing: border-box;
+            --bg: #f5f6fa; 
+            --card-bg: #ffffff; 
+            --text-main: #1e2229; 
+            --text-sub: #57606f; 
+            --blue-neon: #0097e6; 
+            --admin-gold: #d4af37; 
+            --green-neon: #2ecc71;
+            --red-neon: #e74c3c;
+            --amber-neon: #e67e22;
+            --phone-border: #2c3e50; 
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background: #060911;
+            background: #e9ecef;
             color: var(--text-main);
             margin: 0;
-            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            overflow: hidden;
         }
 
-        /* --- MOLDURA DO CELULAR (Padrão para Computador) --- */
+        /* --- MOLDURA DO CELULAR --- */
         .phone-frame {
             width: 380px;
             height: 820px;
-            background: var(--bg-main);
-            border: 12px solid var(--phone-border);
-            border-radius: 54px;
+            background: var(--bg);
+            border: 14px solid var(--phone-border);
+            border-radius: 60px;
             position: relative;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-            flex-shrink: 0;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
         }
 
-        /* Detalhe da Câmera/Notch (Apenas no Computador) */
         .phone-frame::before {
             content: ""; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-            width: 150px; height: 28px; background: var(--phone-border);
-            border-bottom-left-radius: 18px; border-bottom-right-radius: 18px; z-index: 100;
+            width: 160px; height: 30px; background: var(--phone-border);
+            border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; z-index: 100;
         }
 
-        /* --- RESPONSIVIDADE EXCLUSIVA PARA CELULARES REAIS --- */
         @media (max-width: 500px) {
-            body {
-                align-items: flex-start;
-            }
-            .phone-frame { 
-                width: 100vw; 
-                height: 100vh; 
-                border: none; 
-                border-radius: 0; 
-                box-shadow: none;
-            }
+            .phone-frame { width: 100vw; height: 100vh; border: none; border-radius: 0; }
             .phone-frame::before { display: none; }
-            .app-content {
-                padding: 35px 20px;
-            }
         }
 
-        /* Container Interno */
-        .app-content { 
-            flex: 1; 
-            padding: 50px 24px; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center;
-            background-image: radial-gradient(circle at 50% 10%, rgba(0, 240, 255, 0.08) 0%, transparent 70%);
-            position: relative;
-            width: 100%;
-            height: 100%;
+        .app-content { flex: 1; padding: 50px 25px; display: flex; flex-direction: column; justify-content: center; }
+
+        /* --- UI --- */
+        #loginPage, #deviceAuthPage {
+            background: var(--card-bg);
+            border: 2px solid var(--blue-neon);
+            padding: 40px 25px;
+            border-radius: 28px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
         }
 
-        /* --- ESTADOS DE EXIBIÇÃO SEGUROS --- */
-        #loginPage, #deviceAuthPage, #controlPanel {
-            display: none; 
-            width: 100%;
-        }
+        #deviceAuthPage { display: none; border-color: var(--amber-neon); }
 
-        /* --- DESIGN DOS INPUTS --- */
+        .logo-title { font-size: 1.8rem; font-weight: 900; letter-spacing: 5px; color: var(--blue-neon); font-style: italic; margin-bottom: 25px; }
+
         input {
-            width: 100%; padding: 16px; margin: 12px 0;
-            background: #1f2937; border: 2px solid #374151;
-            color: var(--text-main); border-radius: 16px;
-            font-size: 1rem; font-weight: 600;
-            transition: all 0.3s;
+            width: 100%; padding: 16px; margin: 10px 0;
+            background: #f8f9fa; border: 2px solid #ced4da;
+            color: var(--text-main); border-radius: 14px; box-sizing: border-box;
+            font-size: 1rem;
         }
         input:focus {
             outline: none;
-            border-color: var(--cyan-neon);
-            box-shadow: 0 0 10px var(--cyan-glow);
+            border-color: var(--blue-neon);
         }
 
-        /* --- BOTÕES PADRÃO --- */
-        .btn-action {
-            width: 100%; padding: 18px; 
-            background: linear-gradient(135deg, #00b4d8 0%, #00f0ff 100%);
-            border: none; border-radius: 16px; 
-            color: #0b0f19; font-weight: 900; font-size: 1rem; letter-spacing: 1px;
-            cursor: pointer; margin-top: 10px; 
-            box-shadow: 0 4px 20px rgba(0, 240, 255, 0.4);
-            transition: all 0.2s;
-        }
-        .btn-action:active { transform: scale(0.98); }
+        #controlPanel { display: none; width: 100%; }
 
-        /* --- ESTRUTURAS DE PAGINAS FIXAS --- */
-        #loginPage, #deviceAuthPage {
-            background: var(--card-bg);
-            border: 2px solid #1f2937;
-            padding: 40px 24px;
-            border-radius: 28px;
-            text-align: center;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-        }
-
-        /* --- DESIGN DOS CABEÇALHOS --- */
-        .brand-header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .logo-title { 
-            font-size: 2.1rem; font-weight: 900; letter-spacing: 3px; 
-            background: linear-gradient(135deg, #fff 40%, var(--cyan-neon) 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            margin: 0;
-        }
-        .logo-subtitle {
-            font-size: 0.75rem; color: var(--cyan-neon); font-weight: 800;
-            letter-spacing: 5px; text-transform: uppercase; margin-top: 4px;
-        }
-
-        /* PAINEL DE CONTROLE INTEGRADO */
-        .panel-wrapper {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 100%;
-            flex: 1;
-        }
-
-        /* STATUS DA CONEXÃO MQTT */
+        /* STATUS DA CONEXÃO */
         .conn-status {
-            font-size: 0.7rem; text-align: center; margin-bottom: 20px;
-            letter-spacing: 2px; color: #4b5563; font-weight: 900; text-transform: uppercase;
+            font-size: 0.65rem; text-align: center; margin-bottom: 15px;
+            letter-spacing: 2px; color: #7f8c8d; font-weight: bold; text-transform: uppercase;
         }
-        .online { color: var(--cyan-neon) !important; text-shadow: 0 0 8px var(--cyan-glow); }
+        .online { color: var(--blue-neon) !important; text-shadow: 0 0 4px rgba(0, 168, 255, 0.2); }
 
-        /* CARDS DO SISTEMA */
+        /* PADRÃO DE CARDS COM CONTORNOS BEM VISÍVEIS */
         .card {
             background: var(--card-bg);
-            border: 2px solid #1f2937; 
-            border-radius: 24px;
+            border: 2px solid #bdf0ff; 
+            border-radius: 22px;
             padding: 20px;
             margin-bottom: 12px;
             transition: all 0.3s ease;
             text-align: center;
-            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 151, 230, 0.05);
         }
 
-        .label { font-size: 0.7rem; color: var(--text-sub); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
-        .val { font-size: 1.8rem; font-weight: 900; text-transform: uppercase; color: var(--text-main); }
+        .label { font-size: 0.65rem; color: var(--text-sub); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
+        .val { font-size: 1.6rem; font-weight: 900; text-transform: uppercase; color: var(--text-main); }
 
-        /* BOTÃO CENTRAL DE ACIONAMENTO PRINCIPAL */
+        /* DESTAQUE NO BOTÃO PRINCIPAL */
         .main-btn { 
             cursor: pointer; 
             padding: 35px 20px; 
-            background: radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.15) 0%, transparent 75%), var(--card-bg);
-            border: 2px solid var(--cyan-neon) !important; 
-            box-shadow: 0 0 25px rgba(0, 240, 255, 0.2), inset 0 0 15px rgba(0, 240, 255, 0.05);
-            margin: 15px 0;
+            border: 3px solid var(--blue-neon) !important; 
+            box-shadow: 0 6px 16px rgba(0, 151, 230, 0.15);
         }
-        .main-btn .val { color: var(--cyan-neon); text-shadow: 0 0 10px var(--cyan-glow); font-size: 2rem; letter-spacing: 2px; }
 
-        /* GRID ADMINISTRATIVO */
+        /* AREA EXCLUSIVA ADMIN */
         #adminContainer { display: none; margin-bottom: 12px; }
         .grid-admin { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .admin-card { border: 2px solid rgba(255, 215, 0, 0.3) !important; background: rgba(255, 215, 0, 0.02); margin-bottom: 0; }
-        .admin-card .val { color: var(--admin-gold); font-size: 0.85rem; letter-spacing: 0.5px; }
-        .admin-card .label { color: rgba(255, 215, 0, 0.7); }
+        .admin-card { border: 2px solid var(--admin-gold) !important; box-shadow: 0 4px 10px rgba(212, 175, 55, 0.1); }
+        .admin-card .val { color: var(--admin-gold); font-size: 0.9rem; }
 
-        .clickable:active { transform: scale(0.97); filter: brightness(1.2); }
+        .clickable:active { transform: scale(0.96); background: #f1f2f6; }
 
-        /* GRADE DE RODAPÉ */
+        /* GRADE DE RODAPÉ COM CONTORNOS EM AZUL NEON REFORÇADOS */
         .grid-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .sub-btn { cursor: pointer; border: 2px solid #374151 !important; margin-bottom: 0; }
-        .sub-btn .val { font-size: 0.95rem; font-weight: 800; }
-        
-        /* BORDAS E ESTADOS DE ALERTA DINÂMICOS */
-        .border-green { border: 2px solid var(--green-neon) !important; box-shadow: 0 0 15px rgba(0, 255, 135, 0.15); }
-        .border-red { border: 2px solid var(--red-neon) !important; box-shadow: 0 0 15px rgba(255, 59, 48, 0.15); }
-        
-        @keyframes pulse-cyan {
-            0% { box-shadow: 0 0 10px rgba(0, 240, 255, 0.2); border-color: rgba(0, 240, 255, 0.4); }
-            50% { box-shadow: 0 0 25px rgba(0, 240, 255, 0.5); border-color: var(--cyan-neon); }
-            100% { box-shadow: 0 0 10px rgba(0, 240, 255, 0.2); border-color: rgba(0, 240, 255, 0.4); }
+        .sub-btn {
+            cursor: pointer;
+            border: 3px solid var(--blue-neon) !important; /* Borda grossa azul neon viva */
+            box-shadow: 0 4px 12px rgba(0, 151, 230, 0.12);
         }
-        .border-alert { animation: pulse-cyan 1.5s infinite; border: 2px solid var(--cyan-neon) !important; }
         
-        .text-green { color: var(--green-neon) !important; text-shadow: 0 0 8px rgba(0, 255, 135, 0.3); }
-        .text-red { color: var(--red-neon) !important; text-shadow: 0 0 8px rgba(255, 59, 48, 0.3); }
-        .text-amber { color: var(--amber-neon) !important; text-shadow: 0 0 8px rgba(255, 159, 10, 0.3); }
+        /* BORDAS DINÂMICAS DE STATUS */
+        .border-green { border: 3px solid var(--green-neon) !important; background: rgba(46, 204, 113, 0.03); box-shadow: 0 4px 12px rgba(46, 204, 113, 0.15); }
+        .border-red { border: 3px solid var(--red-neon) !important; background: rgba(231, 76, 60, 0.03); box-shadow: 0 4px 12px rgba(231, 76, 60, 0.15); }
+        
+        @keyframes pulse-red-light {
+            0% { box-shadow: 0 0 8px rgba(231, 76, 60, 0.2); border-color: rgba(231, 76, 60, 0.6); }
+            50% { box-shadow: 0 0 20px rgba(231, 76, 60, 0.4); border-color: var(--red-neon); }
+            100% { box-shadow: 0 0 8px rgba(231, 76, 60, 0.2); border-color: rgba(231, 76, 60, 0.6); }
+        }
+        .border-alert { animation: pulse-red-light 1.5s infinite; border: 3px solid var(--red-neon) !important; background: rgba(231, 76, 60, 0.06); }
+        
+        .text-green { color: var(--green-neon) !important; }
+        .text-red { color: var(--red-neon) !important; }
+        .text-amber { color: var(--amber-neon) !important; }
 
-        .user-tag { font-size: 0.6rem; color: #4b5563; text-align: center; margin-top: 15px; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
-        .device-info { font-size: 0.65rem; color: var(--amber-neon); margin-top: 10px; word-break: break-all; font-weight: bold; }
+        .user-tag { font-size: 0.55rem; color: var(--text-sub); text-align: center; margin-top: 20px; text-transform: uppercase; font-weight: bold; }
+        .device-info { font-size: 0.6rem; color: var(--amber-neon); margin-top: 10px; word-break: break-all; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -234,72 +167,64 @@
 <div class="phone-frame">
     <div class="app-content">
         
-        <div id="loginPage" style="display: block;">
-            <div class="brand-header">
-                <div class="logo-title">CONTROWS</div>
-                <div class="logo-subtitle">IoT Control</div>
-            </div>
+        <!-- TELA DE LOGIN -->
+        <div id="loginPage">
+            <div class="logo-title">CONTROWS</div>
             <input type="email" id="email" placeholder="E-mail de acesso">
             <input type="password" id="password" placeholder="Senha">
-            <button class="btn-action" onclick="handleLogin()">ENTRAR</button>
+            <button style="width:100%; padding:18px; background:var(--blue-neon); border:none; border-radius:14px; color:#fff; font-weight:900; cursor:pointer; margin-top:10px; box-shadow: 0 4px 12px rgba(0, 151, 230, 0.3);" onclick="handleLogin()">ENTRAR</button>
         </div>
 
+        <!-- TELA DE BLOQUEIO DE DISPOSITIVO NOVO -->
         <div id="deviceAuthPage">
-            <div class="logo-title" style="background: var(--red-neon); -webkit-background-clip: text;">BLOQUEIO</div>
-            <div class="logo-subtitle" style="color: var(--red-neon);">Segurança Ativa</div>
-            <p style="font-size: 0.85rem; color: var(--text-sub); margin-top: 15px;">Este dispositivo não está autorizado para este usuário.</p>
+            <div class="logo-title" style="color: var(--amber-neon);">BLOQUEIO</div>
+            <p style="font-size: 0.8rem; color: var(--text-sub);">Este dispositivo não está autorizado para este usuário.</p>
             <div class="device-info" id="deviceIdDisplay">ID: ---</div>
             <input type="text" id="activationKey" placeholder="Chave de Ativação">
-            <button class="btn-action" style="background: linear-gradient(135deg, #ff9f0a 0%, #ff5e00 100%); box-shadow: 0 4px 20px rgba(255, 159, 10, 0.3); color: #000;" onclick="verifyDeviceKey()">AUTORIZAR APARELHO</button>
-            <button style="width:100%; padding:14px; background:transparent; border:2px solid #374151; color:var(--text-sub); border-radius:16px; font-weight:bold; cursor:pointer; margin-top:12px;" onclick="logout()">VOLTAR</button>
+            <button style="width:100%; padding:18px; background:var(--amber-neon); border:none; border-radius:14px; font-weight:900; color:#fff; cursor:pointer; margin-top:10px; box-shadow: 0 4px 12px rgba(230, 126, 34, 0.3);" onclick="verifyDeviceKey()">AUTORIZAR APARELHO</button>
+            <button style="width:100%; padding:12px; background:transparent; border:2px solid #ced4da; color:var(--text-sub); border-radius:14px; font-weight:bold; cursor:pointer; margin-top:10px;" onclick="logout()">VOLTAR</button>
         </div>
 
+        <!-- PAINEL DE CONTROLE -->
         <div id="controlPanel">
-            <div class="panel-wrapper">
-                <div>
-                    <div class="brand-header" style="margin-bottom: 10px;">
-                        <div class="logo-title" style="font-size: 1.5rem; letter-spacing: 2px;">BOX INVERTER</div>
-                        <div class="logo-subtitle" style="font-size: 0.55rem; letter-spacing: 4px;">Controws Sistemas</div>
-                    </div>
-                    
-                    <div id="connStatus" class="conn-status">SISTEMA OFFLINE</div>
+            <div id="connStatus" class="conn-status">BOX INVERTER OFFLINE</div>
 
-                    <div id="mainCard" class="card">
-                        <div class="label">Monitoramento de Status</div>
-                        <div id="gateText" class="val">---</div>
-                    </div>
+            <!-- CONTORNO DINÂMICO DO STATUS DO PORTÃO -->
+            <div id="mainCard" class="card">
+                <div class="label">Monitoramento de Status</div>
+                <div id="gateText" class="val">---</div>
+            </div>
 
-                    <div id="adminContainer" class="grid-admin">
-                        <div class="card admin-card clickable" onclick="sendHardwareConfig()">
-                            <div class="label">Portão</div>
-                            <div class="val">AUTO CONFIG</div>
-                        </div>
-                        <div class="card admin-card clickable" onclick="generateDeviceToken()">
-                            <div class="label">Token Celular</div>
-                            <div class="val">GERAR CHAVE</div>
-                        </div>
-                    </div>
+            <!-- BOTÕES EXCLUSIVOS DO ADMIN -->
+            <div id="adminContainer" class="grid-admin">
+                <div class="card admin-card clickable" onclick="sendHardwareConfig()">
+                    <div class="label">Portão</div>
+                    <div class="val">AUTO CONFIG</div>
                 </div>
-
-                <div class="card main-btn clickable" onclick="sendCmdWithLog('PULSO')">
-                    <div class="label" style="color: rgba(0, 240, 255, 0.6);">Portão Principal</div>
-                    <div class="val">ACIONAR</div>
-                </div>
-
-                <div>
-                    <div class="grid-footer">
-                        <div class="card sub-btn clickable" style="border-color: var(--cyan-neon) !important; background: rgba(0, 240, 255, 0.02);" onclick="sendCmdWithLog('AUTO')">
-                            <div class="label" style="color: var(--cyan-neon);">Acesso</div>
-                            <div class="val" style="color: #fff;">PEDESTRE</div>
-                        </div>
-                        <div class="card sub-btn clickable" onclick="logout()">
-                            <div class="label">Sair</div>
-                            <div class="val" style="color: var(--text-sub);">SESSÃO</div>
-                        </div>
-                    </div>
-                    <div id="userTag" class="user-tag"></div>
+                <div class="card admin-card clickable" onclick="generateDeviceToken()">
+                    <div class="label">Token Celular</div>
+                    <div class="val">GERAR CHAVE</div>
                 </div>
             </div>
+
+            <!-- CONTORNO DO BOTÃO ACIONAR -->
+            <div class="card main-btn clickable" onclick="sendCmdWithLog('PULSO')">
+                <div class="label">Portão Principal</div>
+                <div class="val" style="color: var(--blue-neon)">ACIONAR</div>
+            </div>
+
+            <!-- BOTÕES DE RODAPÉ COM BORDAS REFORÇADAS -->
+            <div class="grid-footer">
+                <div class="card sub-btn clickable" onclick="sendCmdWithLog('AUTO')">
+                    <div class="label">Acesso</div>
+                    <div class="val" style="font-size:0.9rem; color: var(--blue-neon);">PEDESTRE</div>
+                </div>
+                <div class="card sub-btn clickable" onclick="logout()">
+                    <div class="label">Sair</div>
+                    <div class="val" style="font-size:0.9rem; color: #7f8c8d;">SESSÃO</div>
+                </div>
+            </div>
+            <div id="userTag" class="user-tag"></div>
         </div>
 
     </div>
@@ -396,7 +321,7 @@
     function showDashboard(user) {
         document.getElementById('loginPage').style.display = 'none';
         document.getElementById('deviceAuthPage').style.display = 'none';
-        document.getElementById('controlPanel').style.display = 'block'; 
+        document.getElementById('controlPanel').style.display = 'block';
         document.getElementById('userTag').innerText = "Acesso: " + user.email;
         
         if (user.email === ADMIN_EMAIL) {
@@ -421,7 +346,7 @@
 
         mqttClient.on('connect', () => {
             const st = document.getElementById('connStatus');
-            st.innerText = "SISTEMA ONLINE";
+            st.innerText = "BOX INVERTER SISTEMA ONLINE";
             st.classList.add('online');
             mqttClient.subscribe('esp32/esp32_01/sensores');
         });
@@ -504,6 +429,15 @@
             checkDeviceAuthorization(user); 
         } 
     });
+
+    // REGISTRO DO SERVICE WORKER (PWA)
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker ativo para CONTROWS:', reg.scope))
+                .catch(err => console.error('Falha ao registrar Service Worker:', err));
+        });
+    }
 </script>
 </body>
 </html>
