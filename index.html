@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="CONTROWS">
     
-    <!-- Ícone PWA via Data URI (Garante carregamento sem arquivos externos adicionais) -->
+    <!-- Ícone PWA via Data URI -->
     <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAAldEVYdENyZWF0aW9uIFRpbWUAMjAyNi0wNS0yMSAyMDo0NTowMCAtMDMwMDC7m8sAAAAXSURBVHic7cEBDQAAAMRi7ftXT6MHAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHAwG6wAAV9w9uIAAAAASUVORK5CYII=">
     <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAAldEVYdENyZWF0aW9uIFRpbWUAMjAyNi0wNS0yMSAyMDo0NTowMCAtMDMwMDC7m8sAAAAXSURBVHic7cEBDQAAAMRi7ftXT6MHAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHAwG6wAAV9w9uIAAAAASUVORK5CYII=">
 
@@ -108,7 +108,7 @@
         }
         .online { color: var(--blue-neon) !important; text-shadow: 0 0 4px rgba(0, 168, 255, 0.2); }
 
-        /* PADRÃO DE CARDS COM CONTORNOS BEM VISÍVEIS */
+        /* PADRÃO DE CARDS */
         .card {
             background: var(--card-bg);
             border: 2px solid #bdf0ff; 
@@ -139,7 +139,7 @@
 
         .clickable:active { transform: scale(0.96); background: #f1f2f6; }
 
-        /* GRADE DE RODAPÉ COM CONTORNOS EM AZUL NEON REFORÇADOS */
+        /* GRADE DE RODAPÉ */
         .grid-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .sub-btn {
             cursor: pointer;
@@ -176,7 +176,7 @@
             <div class="logo-title">CONTROWS</div>
             <input type="email" id="email" placeholder="E-mail de acesso">
             <input type="password" id="password" placeholder="Senha">
-            <button style="width:100%; padding:18px; background:var(--blue-neon); border:none; border-radius:14px; color:#fff; font-weight:900; cursor:pointer; margin-top:10px; box-shadow: 0 4px 12px rgba(0, 151, 230, 0.3);" onclick="handleLogin()">ENTRAR</button>
+            <button id="btnLogin" style="width:100%; padding:18px; background:var(--blue-neon); border:none; border-radius:14px; color:#fff; font-weight:900; cursor:pointer; margin-top:10px; box-shadow: 0 4px 12px rgba(0, 151, 230, 0.3);" onclick="handleLogin()">ENTRAR</button>
         </div>
 
         <!-- TELA DE BLOQUEIO DE DISPOSITIVO NOVO -->
@@ -191,7 +191,7 @@
 
         <!-- PAINEL DE CONTROLE -->
         <div id="controlPanel">
-            <div id="connStatus" class="conn-status">BOX INVERTER OFFLINE</div>
+            <div id="connStatus" class="conn-status">CONECTANDO AO SERVIDOR...</div>
 
             <!-- CONTORNO DINÂMICO DO STATUS DO PORTÃO -->
             <div id="mainCard" class="card">
@@ -236,7 +236,6 @@
 
 <script>
     // --- AUTOMAÇÃO DA PWA EM ARQUIVO ÚNICO ---
-    // Injeta dinamicamente o arquivo manifest.json para evitar erros de arquivo ausente
     const manifestJson = {
         "name": "CONTROWS - SEGURANÇA TOTAL",
         "short_name": "CONTROWS",
@@ -257,7 +256,6 @@
     manifestLink.href = manifestURL;
     document.head.appendChild(manifestLink);
 
-    // Injeta e ativa o Service Worker dinamicamente via Blob URL
     if ('serviceWorker' in navigator) {
         const swCode = `
             const CACHE_NAME = 'controws-v1';
@@ -315,7 +313,20 @@
     function handleLogin() {
         const e = document.getElementById('email').value;
         const p = document.getElementById('password').value;
-        auth.signInWithEmailAndPassword(e, p).catch(err => alert("Acesso Negado: " + err.message));
+        const btn = document.getElementById('btnLogin');
+        
+        // Feedback visual de carregamento
+        const textoOriginal = btn.innerText;
+        btn.innerText = "AUTENTICANDO...";
+        btn.style.opacity = "0.7";
+        btn.disabled = true;
+
+        auth.signInWithEmailAndPassword(e, p).catch(err => {
+            alert("Acesso Negado: " + err.message);
+            btn.innerText = textoOriginal;
+            btn.style.opacity = "1";
+            btn.disabled = false;
+        });
     }
 
     function checkDeviceAuthorization(user) {
@@ -396,15 +407,22 @@
     function initMQTT() {
         if (mqttClient && mqttClient.connected) return;
 
+        const st = document.getElementById('connStatus');
+        
         mqttClient = mqtt.connect('wss://e6609cbe84ae4e2b8eda83c3164e7900.s1.eu.hivemq.cloud:8884/mqtt', {
-            username: 'esp32', password: '517983lgA', clientId: 'CONTROWS_' + Math.random().toString(16).substr(2, 5)
+            username: 'esp32', password: '517983lgA', clientId: 'CONTROWS_' + Math.random().toString(16).substr(2, 5),
+            keepalive: 30 // Melhora a detecção de queda
         });
 
         mqttClient.on('connect', () => {
-            const st = document.getElementById('connStatus');
             st.innerText = "BOX INVERTER SISTEMA ONLINE";
             st.classList.add('online');
             mqttClient.subscribe('esp32/esp32_01/sensores');
+        });
+
+        mqttClient.on('offline', () => {
+            st.innerText = "SISTEMA OFFLINE - RECONECTANDO...";
+            st.classList.remove('online');
         });
 
         mqttClient.on('message', (t, msg) => {
@@ -469,9 +487,28 @@
         }
     }
 
+    // --- PROTEÇÃO CONTRA FLOOD DE COMANDOS (COOLDOWN) ---
+    let isCooldown = false;
+
     function sendCmdWithLog(comando) {
-        if (!mqttClient) return;
+        if (!mqttClient || !mqttClient.connected) {
+            alert("Aguarde a conexão com o servidor.");
+            return;
+        }
+
+        if (isCooldown) {
+            console.log("Comando bloqueado pelo anti-spam. Aguarde...");
+            return; 
+        }
+
+        // Trava novos envios por 3 segundos
+        isCooldown = true;
+        setTimeout(() => {
+            isCooldown = false;
+        }, 3000);
+
         mqttClient.publish('esp32/esp32_01/comando', comando);
+        
         db.collection("logs").add({
             usuario: auth.currentUser.email,
             acao: comando,
