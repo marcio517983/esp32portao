@@ -17,7 +17,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
 
     <style>
         :root {
@@ -41,7 +40,6 @@
 
         #controlPanel { display: none; width: 100%; }
         
-        /* EXIBIÇÃO DA FOTO DO PRODUTO NO PAINEL */
         .box-icon { width: 100%; max-width: 140px; height: auto; margin: 0 auto 20px auto; display: block; border-radius: 12px; box-shadow: 0 8px 25px rgba(0, 151, 230, 0.3); border: 2px solid rgba(0, 151, 230, 0.5); object-fit: cover; }
         
         .conn-status { font-size: 0.65rem; text-align: center; margin-bottom: 15px; letter-spacing: 2px; color: #7f8c8d; font-weight: bold; text-transform: uppercase; }
@@ -71,7 +69,6 @@
         .user-tag { font-size: 0.55rem; color: var(--text-sub); text-align: center; margin-top: 20px; text-transform: uppercase; font-weight: bold; }
         .device-info { font-size: 0.6rem; color: var(--amber-neon); margin-top: 10px; word-break: break-all; font-weight: bold; }
 
-        /* Banners de Instalação */
         .install-banner { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 85%; background: var(--blue-neon); color: #fff; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0, 151, 230, 0.4); display: none; z-index: 999; text-align: center; }
         .install-banner h3 { margin: 0 0 10px 0; font-size: 1.1rem; } .install-banner p { margin: 0 0 15px 0; font-size: 0.8rem; opacity: 0.9; }
         .install-btns { display: flex; gap: 10px; justify-content: center; }
@@ -97,10 +94,10 @@
 
         <div id="deviceAuthPage">
             <div class="logo-title" style="color: var(--amber-neon);">BLOQUEIO</div>
-            <p style="font-size: 0.8rem; color: var(--text-sub);">Este dispositivo não está autorizado para este usuário.</p>
-            <div class="device-info" id="deviceIdDisplay">ID: ---</div>
+            <p style="font-size: 0.8rem; color: var(--text-sub);">Este utilizador não possui nenhuma placa Box Inverter atrelada.</p>
+            <div class="device-info" id="deviceIdDisplay">AGUARDANDO ATIVAÇÃO</div>
             <input type="text" id="activationKey" placeholder="Chave de Ativação">
-            <button style="width:100%; padding:18px; background:var(--amber-neon); border:none; border-radius:14px; font-weight:900; color:#fff; cursor:pointer; margin-top:10px; box-shadow: 0 4px 12px rgba(230, 126, 34, 0.3);" onclick="verifyDeviceKey()">AUTORIZAR APARELHO</button>
+            <button style="width:100%; padding:18px; background:var(--amber-neon); border:none; border-radius:14px; font-weight:900; color:#fff; cursor:pointer; margin-top:10px; box-shadow: 0 4px 12px rgba(230, 126, 34, 0.3);" onclick="verifyDeviceKey()">VINCULAR PLACA</button>
             <button style="width:100%; padding:12px; background:transparent; border:2px solid #ced4da; color:var(--text-sub); border-radius:14px; font-weight:bold; cursor:pointer; margin-top:10px;" onclick="logout()">VOLTAR</button>
         </div>
 
@@ -120,7 +117,7 @@
                     <div class="val">AUTO CONFIG</div>
                 </div>
                 <div class="card admin-card clickable" onclick="generateDeviceToken()">
-                    <div class="label">Token Celular</div>
+                    <div class="label">Nova Placa</div>
                     <div class="val">GERAR CHAVE</div>
                 </div>
             </div>
@@ -131,7 +128,7 @@
             </div>
 
             <div class="grid-footer">
-                <div class="card sub-btn clickable" onclick="sendCmdWithLog('AUTO')">
+                <div class="card sub-btn clickable" onclick="sendCmdWithLog('PEDESTRE')">
                     <div class="label">Acesso</div>
                     <div class="val" style="font-size:0.9rem; color: var(--blue-neon);">PEDESTRE</div>
                 </div>
@@ -162,24 +159,20 @@
 </div>
 
 <script>
-    // --- REGISTRO DO SERVICE WORKER EXTERNO ---
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('/sw.js').catch(err => console.error('Erro no SW:', err));
         });
     }
 
-    // --- FIREBASE E AUTH ---
+    // --- CONFIGURAÇÃO FIREBASE ---
     const ADMIN_EMAIL = "controwssistemas@gmail.com"; 
     const firebaseConfig = { apiKey: "AIzaSyBu4LrzBcnxtdCuFI2LWMRYQstRttEE5xM", authDomain: "controws.firebaseapp.com", projectId: "controws", storageBucket: "controws.firebasestorage.app", messagingSenderId: "554392538069", appId: "1:554392538069:web:fb13b841b9fb06f326cb5c", measurementId: "G-H1GEH28EVB" };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth(); const db = firebase.firestore();
 
-    function getDeviceUUID() {
-        let uuid = localStorage.getItem('controws_device_uuid');
-        if (!uuid) { uuid = 'DEV-' + Math.random().toString(36).substring(2, 10).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase(); localStorage.setItem('controws_device_uuid', uuid); }
-        return uuid;
-    }
+    let macPlacaAutorizada = "";
+    let unsubDispositivo = null;
 
     function handleLogin() {
         const e = document.getElementById('email').value, p = document.getElementById('password').value, btn = document.getElementById('btnLogin');
@@ -188,76 +181,134 @@
     }
 
     function checkDeviceAuthorization(user) {
-        if (user.email === ADMIN_EMAIL) return showDashboard(user);
-        const deviceUUID = getDeviceUUID();
-        db.collection("usuarios_dispositivos").doc(user.email).get().then(doc => {
-            if (doc.exists && doc.data().deviceUUID === deviceUUID) showDashboard(user);
-            else showDeviceAuthPage(user.email, deviceUUID);
-        }).catch(err => { alert("Erro: " + err.message); logout(); });
+        if (user.email === ADMIN_EMAIL) {
+            // Admin precisa digitar o MAC que quer gerenciar para fins de teste, ou gerencia um padrão fixo
+            macPlacaAutorizada = "ESP32_01"; 
+            return showDashboard(user);
+        }
+        
+        db.collection("usuarios_dispositivos").doc(user.uid).get().then(doc => {
+            if (doc.exists && doc.data().macVinculado) {
+                macPlacaAutorizada = doc.data().macVinculado;
+                showDashboard(user);
+            } else {
+                showDeviceAuthPage();
+            }
+        }).catch(err => { alert("Erro de Verificação: " + err.message); logout(); });
     }
 
-    function showDeviceAuthPage(email, uuid) {
-        document.getElementById('loginPage').style.display = 'none'; document.getElementById('controlPanel').style.display = 'none'; document.getElementById('deviceAuthPage').style.display = 'block'; document.getElementById('deviceIdDisplay').innerText = "ID: " + uuid;
+    function showDeviceAuthPage() {
+        document.getElementById('loginPage').style.display = 'none'; document.getElementById('controlPanel').style.display = 'none'; document.getElementById('deviceAuthPage').style.display = 'block';
     }
 
     function verifyDeviceKey() {
-        const user = auth.currentUser, key = document.getElementById('activationKey').value.trim(), uuid = getDeviceUUID();
+        const user = auth.currentUser, key = document.getElementById('activationKey').value.trim();
         if(!key) return alert("Insira a chave!");
-        db.collection("chaves_ativacao").doc(user.email).get().then(doc => {
-            if (doc.exists && doc.data().chave === key) {
-                db.collection("usuarios_dispositivos").doc(user.email).set({ deviceUUID: uuid, autorizadoEm: firebase.firestore.FieldValue.serverTimestamp(), modeloInfo: navigator.userAgent.substring(0, 50) })
-                  .then(() => { alert("Autorizado!"); db.collection("chaves_ativacao").doc(user.email).delete(); showDashboard(user); });
-            } else alert("Chave inválida!");
-        });
+        
+        db.collection("chaves_ativacao").doc(key).get().then(doc => {
+            if (doc.exists) {
+                const macDaPlaca = doc.data().macAddress;
+                
+                db.collection("usuarios_dispositivos").doc(user.uid).set({
+                    macVinculado: macDaPlaca,
+                    autorizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(() => {
+                    alert("Placa Vinculada com Sucesso!");
+                    db.collection("chaves_ativacao").doc(key).delete();
+                    macPlacaAutorizada = macDaPlaca;
+                    showDashboard(user);
+                });
+            } else {
+                alert("Chave inválida ou já utilizada!");
+            }
+        }).catch(err => alert("Erro ao validar chave: " + err.message));
     }
 
     function showDashboard(user) {
         document.getElementById('loginPage').style.display = 'none'; document.getElementById('deviceAuthPage').style.display = 'none'; document.getElementById('controlPanel').style.display = 'block'; document.getElementById('userTag').innerText = "Acesso: " + user.email;
         if (user.email === ADMIN_EMAIL) document.getElementById('adminContainer').style.display = 'grid';
-        initMQTT();
+        initRealtimeDatabaseListener();
     }
-    function logout() { auth.signOut().then(() => location.reload()); }
+    
+    function logout() { 
+        if(unsubDispositivo) unsubDispositivo();
+        auth.signOut().then(() => location.reload()); 
+    }
 
-    // --- MQTT CLIENT ---
-    let mqttClient;
-    function initMQTT() {
-        if (mqttClient && mqttClient.connected) return;
+    // --- SINCRO EM TEMPO REAL VIA FIRESTORE (Substitui MQTT) ---
+    function initRealtimeDatabaseListener() {
         const st = document.getElementById('connStatus');
-        mqttClient = mqtt.connect('wss://e6609cbe84ae4e2b8eda83c3164e7900.s1.eu.hivemq.cloud:8884/mqtt', { username: 'esp32', password: '517983lgA', clientId: 'CONTROWS_' + Math.random().toString(16).substr(2, 5), keepalive: 30 });
-        mqttClient.on('connect', () => { st.innerText = "BOX INVERTER ONLINE"; st.classList.add('online'); mqttClient.subscribe('esp32/esp32_01/sensores'); });
-        mqttClient.on('offline', () => { st.innerText = "OFFLINE - RECONECTANDO..."; st.classList.remove('online'); });
-        mqttClient.on('message', (t, msg) => {
-            try {
-                const data = JSON.parse(msg.toString()), display = document.getElementById('gateText'), card = document.getElementById('mainCard');
-                if (data.sensor2.includes("ALERTA")) { display.innerText = "ALERTA ABERTO"; display.className = "val text-red"; card.className = "card border-alert"; }
-                else if (data.sensor2 === "ABERTO") { display.innerText = "ABERTO"; display.className = "val text-green"; card.className = "card border-green"; }
-                else if (data.sensor2 === "FECHADO") { display.innerText = "FECHADO"; display.className = "val text-red"; card.className = "card border-red"; }
-                else { display.innerText = data.sensor2; display.className = "val text-amber"; card.className = "card"; }
-            } catch (e) { }
+        st.innerText = "SINCRO PRODUTO ONLINE";
+        st.classList.add('online');
+
+        // Escuta as alterações que o ESP32 faz no nó do dispositivo correspondente ao MAC
+        unsubDispositivo = db.collection("dispositivos").doc(macPlacaAutorizada)
+            .onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    const display = document.getElementById('gateText'), card = document.getElementById('mainCard');
+                    
+                    if (!data.statusPortao) return;
+
+                    if (data.statusPortao.includes("ALERTA")) { display.innerText = "ALERTA ABERTO"; display.className = "val text-red"; card.className = "card border-alert"; }
+                    else if (data.statusPortao === "ABERTO") { display.innerText = "ABERTO"; display.className = "val text-green"; card.className = "card border-green"; }
+                    else if (data.statusPortao === "FECHADO") { display.innerText = "FECHADO"; display.className = "val text-red"; card.className = "card border-red"; }
+                    else { display.innerText = data.statusPortao; display.className = "val text-amber"; card.className = "card"; }
+                }
+            }, (error) => {
+                st.innerText = "ERRO DE CONEXÃO";
+                st.classList.remove('online');
+            });
+    }
+
+    // --- EXECUÇÃO DE COMANDOS ---
+    function sendHardwareConfig() {
+        if (auth.currentUser.email !== ADMIN_EMAIL) return;
+        if (confirm("Enviar comando CONFIG?")) {
+            db.collection("dispositivos").doc(macPlacaAutorizada).update({
+                comandoAtual: "CONFIG",
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            registrarLog("CONFIG");
+        }
+    }
+    
+    function generateDeviceToken() {
+        if (auth.currentUser.email !== ADMIN_EMAIL) return;
+        const macAlvo = prompt("Digite o endereço MAC do ESP32 físico deste cliente:");
+        if (macAlvo) {
+            const token = Math.floor(100000 + Math.random() * 900000).toString();
+            db.collection("chaves_ativacao").doc(token).set({
+                macAddress: macAlvo,
+                geradoEm: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => alert(`Chave Gerada para o MAC [${macAlvo}]: ${token}`));
+        }
+    }
+
+    let isCooldown = false;
+    function sendCmdWithLog(comando) {
+        if (!macPlacaAutorizada) return alert("Nenhum dispositivo atrelado.");
+        if (isCooldown) return;
+        isCooldown = true; setTimeout(() => isCooldown = false, 3000);
+        
+        // Escreve o comando no documento do MAC correspondente. O ESP32 vai ler essa mudança na outra ponta.
+        db.collection("dispositivos").doc(macPlacaAutorizada).update({
+            comandoAtual: comando,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+            registrarLog(comando);
+        }).catch(err => alert("Erro ao acionar: Acesso Negado."));
+    }
+
+    function registrarLog(comando) {
+        db.collection("logs").add({
+            usuario: auth.currentUser.email,
+            acao: comando,
+            macAddress: macPlacaAutorizada,
+            data: firebase.firestore.FieldValue.serverTimestamp()
         });
     }
 
-    // --- ADMIN E CONTROLE ---
-    function sendHardwareConfig() {
-        if (auth.currentUser.email !== ADMIN_EMAIL || !mqttClient) return;
-        if (confirm("Enviar comando CONFIG?")) { mqttClient.publish('esp32/esp32_01/comando', 'CONFIG'); db.collection("logs").add({ usuario: auth.currentUser.email, acao: "CONFIG", device: getDeviceUUID(), data: firebase.firestore.FieldValue.serverTimestamp() }); }
-    }
-    function generateDeviceToken() {
-        if (auth.currentUser.email !== ADMIN_EMAIL) return;
-        const emailAlvo = prompt("E-mail para o token:");
-        if (emailAlvo) {
-            const token = Math.floor(100000 + Math.random() * 900000).toString();
-            db.collection("chaves_ativacao").doc(emailAlvo).set({ chave: token, geradoEm: firebase.firestore.FieldValue.serverTimestamp() }).then(() => alert(`Chave para [${emailAlvo}]: ${token}`));
-        }
-    }
-    let isCooldown = false;
-    function sendCmdWithLog(comando) {
-        if (!mqttClient || !mqttClient.connected) return alert("Aguarde a conexão.");
-        if (isCooldown) return;
-        isCooldown = true; setTimeout(() => isCooldown = false, 3000);
-        mqttClient.publish('esp32/esp32_01/comando', comando);
-        db.collection("logs").add({ usuario: auth.currentUser.email, acao: comando, device: getDeviceUUID(), data: firebase.firestore.FieldValue.serverTimestamp() });
-    }
     auth.onAuthStateChanged(user => { if (user) checkDeviceAuthorization(user); });
 
     // --- INSTALAÇÃO PWA ---
